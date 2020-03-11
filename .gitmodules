@@ -1,0 +1,4 @@
+[submodule "libft"]
+	path = libft
+	branch = malloc
+	url = https://github.com/HappyTramp/libft

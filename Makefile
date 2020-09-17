@@ -1,3 +1,15 @@
+# ############################################################################ #
+#                                                                              #
+#                                                         :::      ::::::::    #
+#    Makefile                                           :+:      :+:    :+:    #
+#                                                     +:+ +:+         +:+      #
+#    By: charles <me@cacharle.xyz>                  +#+  +:+       +#+         #
+#                                                 +#+#+#+#+#+   +#+            #
+#    Created: 2020/09/17 19:54:24 by charles           #+#    #+#              #
+#    Updated: 2020/09/17 19:54:31 by charles          ###   ########.fr        #
+#                                                                              #
+# ############################################################################ #
+
 CC = gcc
 LIB = ar rcs
 RM = rm -f
@@ -11,19 +23,19 @@ INCDIR = include
 
 CCFLAGS = -I$(INCDIR) -Wall -Wextra #-Werror
 
-INCLUDE = $(shell find $(INCDIR) -type f -name '*.h')
+INC = $(shell find $(INCDIR) -type f -name '*.h')
 SRC = $(shell find $(SRCDIR) -type f -name '*.c')
 OBJ = $(SRC:$(SRCDIR)/%.c=$(OBJDIR)/%.o)
 
 all: prebuild $(NAME)
 
 prebuild:
-	@mkdir $(OBJDIR)
+	@mkdir -vp $(OBJDIR)
 
 $(NAME): $(OBJ)
 	$(LIB) $(NAME) $(OBJ)
 
-$(OBJDIR)/%.o: $(SRCDIR)/%.c $(INCLUDE)
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(INC)
 	$(CC) $(CCFLAGS) -c -o $@ $<
 
 clean:

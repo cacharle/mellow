@@ -1,3 +1,3 @@
-# malloc
+# mellow
 
-malloc project of school 42.
+`malloc` rewrite based on the school 42 project.

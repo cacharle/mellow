@@ -21,11 +21,9 @@
 # include <sys/mman.h>
 # include <sys/resource.h>
 
-# include "libft.h"
-
-void	*malloc(size_t size);
-void	free(void *ptr);
-void	*realloc(void *ptr, size_t size);
+void	*mw_malloc(size_t size);
+void	mw_free(void *ptr);
+void	*mw_realloc(void *ptr, size_t size);
 
 // coalesce blocks
 

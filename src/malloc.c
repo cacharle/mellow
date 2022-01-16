@@ -12,113 +12,117 @@
 
 #include "mellow/mellow.h"
 
-void	*allocate(void *addr, size_t size)
+void *
+allocate(void *addr, size_t size)
 {
-	void	*ret;
+    void *ret;
 
-	ret = mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-	if (ret == MAP_FAILED)
-	{
-		errno = ENOMEM;
-		return (NULL);
-	}
-	return (ret);
+    ret =
+        mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    if (ret == MAP_FAILED)
+    {
+        errno = ENOMEM;
+        return (NULL);
+    }
+    return (ret);
 }
 
-t_malloc_internals g_internals = {
-	.heap = NULL,
-	.free_lists[LIST_TINY] = NULL,
-	.free_lists[LIST_SMALL] = NULL,
-	.free_lists[LIST_LARGE] = NULL,
-	.small_max = 0,
-	.tiny_max = 0
-};
+t_malloc_internals g_internals = {.heap = NULL,
+                                  .free_lists[LIST_TINY] = NULL,
+                                  .free_lists[LIST_SMALL] = NULL,
+                                  .free_lists[LIST_LARGE] = NULL,
+                                  .small_max = 0,
+                                  .tiny_max = 0};
 
-bool	heap_init(void)
+bool
+heap_init(void)
 {
-	size_t	size;
+    size_t size;
 
-	g_internals.small_max = getpagesize();
-	g_internals.tiny_max = g_internals.small_max >> 4;
+    g_internals.small_max = getpagesize();
+    g_internals.tiny_max = g_internals.small_max >> 4;
 
-	size = (g_internals.tiny_max + sizeof(t_block) + sizeof(size_t)) * ZONE_BLOCKS;
-	g_internals.free_lists[LIST_TINY] = allocate(NULL, size);
-	g_internals.free_lists[LIST_TINY]->size = size;
-	g_internals.free_lists[LIST_TINY]->next = NULL;
-	g_internals.free_lists[LIST_TINY]->prev = NULL;
+    size = (g_internals.tiny_max + sizeof(t_block) + sizeof(size_t)) * ZONE_BLOCKS;
+    g_internals.free_lists[LIST_TINY] = allocate(NULL, size);
+    g_internals.free_lists[LIST_TINY]->size = size;
+    g_internals.free_lists[LIST_TINY]->next = NULL;
+    g_internals.free_lists[LIST_TINY]->prev = NULL;
 
-	size = (g_internals.small_max + sizeof(t_block) + sizeof(size_t)) * ZONE_BLOCKS;
-	g_internals.free_lists[LIST_SMALL] = allocate(
-		g_internals.free_lists[LIST_TINY] + g_internals.free_lists[LIST_TINY]->size,
-		size
-	);
-	g_internals.free_lists[LIST_SMALL]->size = size;
-	g_internals.free_lists[LIST_SMALL]->next = NULL;
-	g_internals.free_lists[LIST_SMALL]->prev = NULL;
+    size = (g_internals.small_max + sizeof(t_block) + sizeof(size_t)) * ZONE_BLOCKS;
+    g_internals.free_lists[LIST_SMALL] = allocate(
+        g_internals.free_lists[LIST_TINY] + g_internals.free_lists[LIST_TINY]->size,
+        size);
+    g_internals.free_lists[LIST_SMALL]->size = size;
+    g_internals.free_lists[LIST_SMALL]->next = NULL;
+    g_internals.free_lists[LIST_SMALL]->prev = NULL;
 
-	g_internals.free_lists[LIST_LARGE] = NULL;
-	g_internals.heap = g_internals.free_lists[LIST_TINY];
-	g_internals.heap_last = g_internals.free_lists[LIST_SMALL] + g_internals.free_lists[LIST_SMALL]->size;
-	return (true);
+    g_internals.free_lists[LIST_LARGE] = NULL;
+    g_internals.heap = g_internals.free_lists[LIST_TINY];
+    g_internals.heap_last = g_internals.free_lists[LIST_SMALL] +
+                            g_internals.free_lists[LIST_SMALL]->size;
+    return (true);
 }
 
-size_t	align(size_t x)
+size_t
+align(size_t x)
 {
-	return (x + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1);
+    return (x + (ALIGNMENT - 1)) & ~(ALIGNMENT - 1);
 }
 
-void	split_block(t_block *block, size_t new_size)
+void
+split_block(t_block *block, size_t new_size)
 {
-	t_block *rest;
+    t_block *rest;
 
-	rest = block + new_size;
-	block_set_size(rest, block->size - new_size);
-	rest->prev = block;
-	rest->next = block->next;
-	block_set_size(block, new_size);
-	block->next = rest;
+    rest = block + new_size;
+    block_set_size(rest, block->size - new_size);
+    rest->prev = block;
+    rest->next = block->next;
+    block_set_size(block, new_size);
+    block->next = rest;
 }
 
-t_block	*find_fit(size_t size)
+t_block *
+find_fit(size_t size)
 {
-	t_block	*fit;
+    t_block *fit;
 
-	if (size <= g_internals.tiny_max)
-		fit = g_internals.free_lists[LIST_TINY];
-	else if (size <= g_internals.small_max)
-		fit = g_internals.free_lists[LIST_SMALL];
-	else
-		fit = g_internals.free_lists[LIST_LARGE];
-	while (fit != NULL)
-	{
-		if (!(fit->size & 1) && (fit->size & ~1) - (2 * sizeof(size_t)) >= size)
-			return (fit);
-		fit = fit->next;
-	}
-	return (NULL);
+    if (size <= g_internals.tiny_max)
+        fit = g_internals.free_lists[LIST_TINY];
+    else if (size <= g_internals.small_max)
+        fit = g_internals.free_lists[LIST_SMALL];
+    else
+        fit = g_internals.free_lists[LIST_LARGE];
+    while (fit != NULL)
+    {
+        if (!(fit->size & 1) && (fit->size & ~1) - (2 * sizeof(size_t)) >= size)
+            return (fit);
+        fit = fit->next;
+    }
+    return (NULL);
 }
 
-void	*malloc(size_t size)
+void *
+malloc(size_t size)
 {
-	t_block	*block;
+    t_block *block;
 
-	if (size == 0)
-		return (NULL);
-	if (g_internals.heap == NULL)
-		heap_init();
-	size = align(size);
-	block = find_fit(size);
-	/* if (block == NULL) */
-	/* { */
-	/* 	if (!grow_heap()) */
-	/* 		return (NULL); */
-	/* 	block = find_fit(size); */
-	/* } */
-	split_block(block, size);
-	block_set_size(block, block->size | 1);
-	return (block + sizeof(size_t));
+    if (size == 0)
+        return (NULL);
+    if (g_internals.heap == NULL)
+        heap_init();
+    size = align(size);
+    block = find_fit(size);
+    /* if (block == NULL) */
+    /* { */
+    /* 	if (!grow_heap()) */
+    /* 		return (NULL); */
+    /* 	block = find_fit(size); */
+    /* } */
+    split_block(block, size);
+    block_set_size(block, block->size | 1);
+    return (block + sizeof(size_t));
 }
-
 
 /* bool grow_heap(void) */
 /* { */

@@ -3,3 +3,5 @@
 *.a
 *.so
 .cache
+a.out
+vgcore.*

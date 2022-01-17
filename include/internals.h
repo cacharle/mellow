@@ -8,6 +8,7 @@
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
 
@@ -30,15 +31,16 @@ typedef struct block
 
 #define BLOCK_METADATA_SIZE (sizeof(block_t) + sizeof(size_t))
 
-/* typedef struct
+struct zone
 {
-    char  *name;
-    size_t max_size;
-} size_class_t; */
+    size_t pages;
+    size_t bytes;
+};
 
 struct mellow_internals
 {
     block_t *heap;
+    block_t *free_list;
     // void    *heap_last;
     // block_t *free_lists[3];
     // size_t   small_max;

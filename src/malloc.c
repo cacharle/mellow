@@ -21,8 +21,14 @@ allocate(void *addr, size_t size)
     return ret;
 }
 
+// struct zone zones[2] = {
+//     { .bytes = 256 },
+//     { .bytes = 4096 },
+// };
+
 struct mellow_internals mw_internals = {
     .heap = NULL,
+    .free_list = NULL,
     // .free_lists[MW_LIST_TINY] = NULL,
     // .free_lists[MW_LIST_SMALL] = NULL,
     // .free_lists[MW_LIST_LARGE] = NULL,
@@ -154,6 +160,7 @@ mw_free(void *ptr)
 
     if (block != mw_internals.heap)
     {
+        // if block before is free coalesce
         size_t prev_marked_size = *(size_t *)((void *)block - sizeof(size_t));
         if (!(prev_marked_size & 1))
         {
@@ -167,8 +174,15 @@ mw_free(void *ptr)
         }
     }
 
-    // if block before is free coalesce
     // if block after is free coalesce
+    // if (block != last_block)
+    // {
+    //     if (!(block->next->size & 1))
+    //     {
+    //         block->next
+    //
+    //     }
+    // }
 }
 
 /*
@@ -184,3 +198,22 @@ void	*realloc(void *ptr, size_t size)
     ft_memcpy(ret, ptr, block->size);
     return (ret);
 }  */
+
+/*
+ * calloc isn't always the same as malloc+memset
+ * - it checks for multiplication overflow
+ * - TODO: on big allocations (when mmap forced), the system zeroes
+ *   the allocation by itself already so calling memset is a wasteful
+ *   (on small allocation, it is equivalent to malloc+memset)
+ *   the system zeroes the pages for security reasons
+ *   (sensitive information could still be there)
+ */
+void *
+mw_calloc(size_t nmemb, size_t size)
+{
+    size_t ret_size = nmemb * size;
+    if (size == 0 || ret_size / size != nmemb)
+        return NULL;
+    void *ret = mw_malloc(ret_size);
+    return memset(ret, 0, ret_size);
+}

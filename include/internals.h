@@ -90,5 +90,7 @@ void *
 block_end(block_t *block);
 size_t *
 block_footer(block_t *block);
+void *
+block_data(block_t *block);
 
 #endif

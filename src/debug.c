@@ -13,14 +13,15 @@ mw_debug_show(void)
     for (size_t i = 0; curr != NULL; curr = curr->next, i++)
     {
         fprintf(stderr,
-                "mellow: block %zu: %p -> %p (%p -> %p) | %zu (%zu)\n",
+                "mellow: block %zu: %p -> %p (%p -> %p) | %zu (%zu) %s\n",
                 i,
                 (void *)curr + sizeof(block_t),
                 block_end(curr) - sizeof(size_t),
                 curr,
                 block_end(curr),
                 block_size(curr),
-                block_full_size(curr));
+                block_full_size(curr),
+                block_available(curr) ? "(available)" : "(occupied)");
     }
 }
 

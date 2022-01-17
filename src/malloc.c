@@ -143,13 +143,30 @@ mw_malloc(size_t size)
     }
     split_block(block, size);
     block_set_size(block, block->size | 1);
-    return block + sizeof(block_t);
+    return block_data(block);
 }
 
 void
 mw_free(void *ptr)
 {
-    // mark block as freed
+    block_t *block = ptr - sizeof(block_t);
+    block_set_size(block, block_size(block));  // mark block as freed
+
+    if (block != mw_internals.heap)
+    {
+        size_t prev_marked_size = *(size_t *)((void *)block - sizeof(size_t));
+        if (!(prev_marked_size & 1))
+        {
+            size_t   prev_size = prev_marked_size & ~1;
+            block_t *prev_block = (void *)block - BLOCK_METADATA_SIZE - prev_size;
+            prev_block->next = block->next;
+            block->next->prev = prev_block;
+            size_t merged_size = prev_size + block_full_size(block);
+            block = prev_block;
+            block_set_size(block, merged_size);
+        }
+    }
+
     // if block before is free coalesce
     // if block after is free coalesce
 }

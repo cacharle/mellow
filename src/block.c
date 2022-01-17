@@ -36,3 +36,9 @@ block_footer(block_t *block)
 {
     return (void *)block + sizeof(block_t) + block_size(block);
 }
+
+void *
+block_data(block_t *block)
+{
+    return (void *)block + sizeof(block_t);
+}

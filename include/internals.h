@@ -1,15 +1,15 @@
 #ifndef MELLOW_INTERNALS_H
 #define MELLOW_INTERNALS_H
 
-#include <sys/mman.h>
-#include <sys/resource.h>
 #define _XOPEN_SOURCE 500
-// #define _POSIX_C_SOURCE 201112L
+#define _DEFAULT_SOURCE  // needed for MAP_ANONYMOUS
 #include <unistd.h>
 #include <errno.h>
 #include <stddef.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <sys/mman.h>
+#include <sys/resource.h>
 
 // union block_size
 // {

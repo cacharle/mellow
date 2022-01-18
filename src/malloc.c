@@ -112,15 +112,25 @@ mw_free(void *ptr)
         size_t prev_marked_size = *(size_t *)((void *)block - sizeof(size_t));
         if (!(prev_marked_size & 1))
         {
-            size_t   prev_size = prev_marked_size & ~1;
-            block_t *prev_block = (void *)block - BLOCK_METADATA_SIZE - prev_size;
-            prev_block->next = block->next;
-            block->next->prev = prev_block;
-            size_t merged_size = prev_size + block_size(block);
+            size_t prev_size = prev_marked_size & ~1;
+            size_t curr_size = block->size;
+            // remove prev from free list
+            block_t *prev_block = (void *)block - prev_size;
+            if (prev_block->prev != NULL)
+                prev_block->prev->next = prev_block->next;
+            else
+                mw_internals.free_list = prev_block->next;
+            if (prev_block->next != NULL)
+                prev_block->next->prev = prev_block->prev;
             block = prev_block;
-            block_set_size(block, merged_size);
+            block_set_size(block, prev_size + curr_size);
         }
     }
+    // insert block in free list
+    block->prev = NULL;
+    block->next = mw_internals.free_list;
+    mw_internals.free_list->prev = block;
+    mw_internals.free_list = block;
 
     // if block after is free coalesce
     // if (block != last_block)

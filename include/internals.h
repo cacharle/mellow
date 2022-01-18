@@ -12,16 +12,6 @@
 #include <sys/mman.h>
 #include <sys/resource.h>
 
-// union block_size
-// {
-//     uint64_t size;
-//     struct
-//     {
-//         uint64_t size_bits : 63;
-//         uint64_t taken : 1;
-//     } granular;
-// };
-
 typedef struct block
 {
     size_t        size;
@@ -29,7 +19,7 @@ typedef struct block
     struct block *next;
 } block_t;
 
-#define BLOCK_METADATA_SIZE (sizeof(block_t) + sizeof(size_t))
+#define BLOCK_METADATA_SIZE (2 * sizeof(size_t))
 
 struct zone
 {
@@ -40,21 +30,11 @@ struct zone
 struct mellow_internals
 {
     block_t *heap;
+    size_t   heap_size;
     block_t *free_list;
-    // void    *heap_last;
-    // block_t *free_lists[3];
-    // size_t   small_max;
-    // size_t   tiny_max;
 };
 
 extern struct mellow_internals mw_internals;
-
-// enum
-// {
-//     MW_LIST_TINY = 0,
-//     MW_LIST_SMALL,
-//     MW_LIST_LARGE,
-// };
 
 /*
  * small is the page size
@@ -87,12 +67,12 @@ block_available(block_t *block);
 size_t
 block_size(block_t *block);
 size_t
-block_full_size(block_t *block);
+block_payload_size(block_t *block);
 void *
 block_end(block_t *block);
 size_t *
 block_footer(block_t *block);
 void *
-block_data(block_t *block);
+block_payload(block_t *block);
 
 #endif

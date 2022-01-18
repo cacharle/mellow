@@ -29,11 +29,6 @@ allocate(void *addr, size_t size)
 struct mellow_internals mw_internals = {
     .heap = NULL,
     .free_list = NULL,
-    // .free_lists[MW_LIST_TINY] = NULL,
-    // .free_lists[MW_LIST_SMALL] = NULL,
-    // .free_lists[MW_LIST_LARGE] = NULL,
-    // .small_max = 0,
-    // .tiny_max = 0
 };
 
 static size_t heap_size = 1 << 11;
@@ -43,89 +38,43 @@ heap_init(void)
 {
     heap_size = align(heap_size);
     mw_internals.heap = allocate(NULL, heap_size);
+    mw_internals.heap_size = heap_size;
     if (mw_internals.heap == NULL)
         return false;
-    block_t *block = mw_internals.heap;
-    block->next = NULL;
-    block->prev = NULL;
-    block_set_size(block, heap_size - sizeof(block_t) - sizeof(size_t));
-
-    // size_t size;
-    // mw_internals.small_max = getpagesize();
-    // mw_internals.tiny_max = mw_internals.small_max >> 4;
-    //
-    // size = (mw_internals.tiny_max + sizeof(block_t) + sizeof(size_t)) *
-    // ZONE_BLOCKS; mw_internals.free_lists[MW_LIST_TINY] = allocate(NULL, size);
-    // mw_internals.free_lists[MW_LIST_TINY]->size = size;
-    // mw_internals.free_lists[MW_LIST_TINY]->next = NULL;
-    // mw_internals.free_lists[MW_LIST_TINY]->prev = NULL;
-    //
-    // size = (mw_internals.small_max + sizeof(block_t) + sizeof(size_t)) *
-    // ZONE_BLOCKS; mw_internals.free_lists[MW_LIST_SMALL] =
-    //     allocate(mw_internals.free_lists[MW_LIST_TINY] +
-    //                  mw_internals.free_lists[MW_LIST_TINY]->size,
-    //              size);
-    // mw_internals.free_lists[MW_LIST_SMALL]->size = size;
-    // mw_internals.free_lists[MW_LIST_SMALL]->next = NULL;
-    // mw_internals.free_lists[MW_LIST_SMALL]->prev = NULL;
-    //
-    // mw_internals.free_lists[MW_LIST_LARGE] = NULL;
-    // mw_internals.heap = mw_internals.free_lists[MW_LIST_TINY];
-    // mw_internals.heap_last = mw_internals.free_lists[MW_LIST_SMALL] +
-    //                          mw_internals.free_lists[MW_LIST_SMALL]->size;
+    mw_internals.free_list = mw_internals.heap;
+    mw_internals.free_list->prev = NULL;
+    mw_internals.free_list->next = NULL;
+    block_set_size(mw_internals.free_list, heap_size);
     return true;
 }
 
-// static bool
-// grow_heap(void)
-// {
-//     if (g_heap == NULL)
-//     {
-//         if ((g_heap = allocate(NULL, CHUNK_SIZE)) == NULL)
-//             return (false);
-//         g_heap->size = 0;
-//         g_heap->next = g_heap;
-//         g_heap->prev = g_heap;
-//     }
-//     block_t *last = g_heap;
-//     while (last->next != NULL)
-//         last = last->next;
-//     last->next = allocate(g_heap + CHUNK_SIZE, CHUNK_SIZE);
-//     if (last->next == NULL)
-//         return (false);
-//     last->next->prev = last;
-//     last->next->next = NULL;
-//     return (true);
-// }
-
 static block_t *
-find_fit(size_t size)
+find_fit(size_t payload_size)
 {
-    block_t *block = mw_internals.heap;
-    // if (size <= mw_internals.tiny_max)
-    //     block = mw_internals.free_lists[MW_LIST_TINY];
-    // else if (size <= mw_internals.small_max)
-    //     block = mw_internals.free_lists[MW_LIST_SMALL];
-    // else
-    //     block = mw_internals.free_lists[MW_LIST_LARGE];
-    for (; block != NULL; block = block->next)
+    for (block_t *block = mw_internals.free_list; block != NULL; block = block->next)
     {
-        if (block_available(block) && block_size(block) >= size)
+        if (block_payload_size(block) >= payload_size)
             return block;
     }
     return NULL;
 }
 
 static void
-split_block(block_t *block, size_t new_size)
+split_block(block_t *block, size_t payload_size)
 {
-    size_t block_prev_size = block_size(block);
-    block_set_size(block, new_size);
+    size_t new_block_size = payload_size + BLOCK_METADATA_SIZE;
+    size_t prev_block_size = block_size(block);
+    block_set_size(block, new_block_size | 1);
     block_t *rest = block_end(block);
-    block_set_size(rest, block_prev_size - new_size - BLOCK_METADATA_SIZE);
-    rest->prev = block;
+    block_set_size(rest, prev_block_size - new_block_size);
+    rest->prev = block->prev;
     rest->next = block->next;
-    block->next = rest;
+    if (rest->prev != NULL)
+        rest->prev->next = rest;
+    else
+        mw_internals.free_list = rest;
+    if (rest->next != NULL)
+        rest->next->prev = rest;
 }
 
 void *
@@ -148,14 +97,13 @@ mw_malloc(size_t size)
         return NULL;
     }
     split_block(block, size);
-    block_set_size(block, block->size | 1);
-    return block_data(block);
+    return block_payload(block);
 }
 
 void
 mw_free(void *ptr)
 {
-    block_t *block = ptr - sizeof(block_t);
+    block_t *block = ptr - sizeof(size_t);
     block_set_size(block, block_size(block));  // mark block as freed
 
     if (block != mw_internals.heap)
@@ -168,7 +116,7 @@ mw_free(void *ptr)
             block_t *prev_block = (void *)block - BLOCK_METADATA_SIZE - prev_size;
             prev_block->next = block->next;
             block->next->prev = prev_block;
-            size_t merged_size = prev_size + block_full_size(block);
+            size_t merged_size = prev_size + block_size(block);
             block = prev_block;
             block_set_size(block, merged_size);
         }

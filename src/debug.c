@@ -10,17 +10,19 @@ mw_debug_show(void)
         fputs("mellow: cannot show uninitalized heap\n", stderr);
         return;
     }
-    for (size_t i = 0; curr != NULL; curr = curr->next, i++)
+    for (size_t i = 0;
+         (void *)curr < (void *)mw_internals.heap + mw_internals.heap_size;
+         curr = block_end(curr), i++)
     {
         fprintf(stderr,
                 "mellow: block %zu: %p -> %p (%p -> %p) | %zu (%zu) %s\n",
                 i,
-                (void *)curr + sizeof(block_t),
+                (void *)curr + sizeof(size_t),
                 block_end(curr) - sizeof(size_t),
                 curr,
                 block_end(curr),
+                block_payload_size(curr),
                 block_size(curr),
-                block_full_size(curr),
                 block_available(curr) ? "(available)" : "(occupied)");
     }
 }

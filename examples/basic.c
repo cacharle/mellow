@@ -6,6 +6,7 @@ main(void)
 {
     mw_debug_show();
     int *p = mw_malloc(10 * sizeof(int));
+    mw_debug_show();
     printf("p=%p\n", p);
     for (int i = 0; i < 10; i++)
         p[i] = i * i;
@@ -17,8 +18,8 @@ main(void)
     void *p4 = mw_malloc(13);
     mw_debug_show();
     printf("================= free =============\n");
-    mw_free(p);
-    mw_free(p2);
-    mw_debug_show();
+    // mw_free(p);
+    // mw_free(p2);
+    // mw_debug_show();
     return 0;
 }

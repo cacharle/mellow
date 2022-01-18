@@ -20,25 +20,25 @@ block_size(block_t *block)
 }
 
 size_t
-block_full_size(block_t *block)
+block_payload_size(block_t *block)
 {
-    return block_size(block) + BLOCK_METADATA_SIZE;
+    return block_size(block) - BLOCK_METADATA_SIZE;
 }
 
 void *
 block_end(block_t *block)
 {
-    return (void *)block + block_full_size(block);
+    return (void *)block + block_size(block);
 }
 
 size_t *
 block_footer(block_t *block)
 {
-    return (void *)block + sizeof(block_t) + block_size(block);
+    return block_end(block) - sizeof(size_t);
 }
 
 void *
-block_data(block_t *block)
+block_payload(block_t *block)
 {
-    return (void *)block + sizeof(block_t);
+    return (void *)block + sizeof(size_t);
 }

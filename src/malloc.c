@@ -126,21 +126,32 @@ mw_free(void *ptr)
             block_set_size(block, prev_size + curr_size);
         }
     }
+
+    if (block_end(block) != (void *)mw_internals.heap + mw_internals.heap_size)
+    {
+        // if block after is free coalesce
+        size_t next_marked_size = *(size_t *)block_end(block);
+        if (!(next_marked_size & 1))
+        {
+            size_t   next_size = next_marked_size & ~1;
+            size_t   curr_size = block->size;
+            block_t *next_block = block_end(block);
+            if (next_block->prev != NULL)
+                next_block->prev->next = next_block->next;
+            else
+                mw_internals.free_list = next_block->next;
+            if (next_block->next != NULL)
+                next_block->next->prev = next_block->prev;
+            block_set_size(block, next_size + curr_size);
+        }
+    }
+
     // insert block in free list
     block->prev = NULL;
     block->next = mw_internals.free_list;
+    // if (mw_internals.free_list != NULL)
     mw_internals.free_list->prev = block;
     mw_internals.free_list = block;
-
-    // if block after is free coalesce
-    // if (block != last_block)
-    // {
-    //     if (!(block->next->size & 1))
-    //     {
-    //         block->next
-    //
-    //     }
-    // }
 }
 
 /*

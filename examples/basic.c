@@ -18,10 +18,10 @@ main(void)
     void *p4 = mw_malloc(13);
     mw_debug_show();
     printf("================= free1 =============\n");
-    mw_free(p);
+    mw_free(p2);
     mw_debug_show();
     printf("================= free2 =============\n");
-    mw_free(p2);
+    mw_free(p);
     mw_debug_show();
     return 0;
 }

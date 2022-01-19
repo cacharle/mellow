@@ -125,6 +125,15 @@ Test(mw_malloc, alignment_32)
     ASSERT_HEAP_EQ(heap_layout);
 }
 
+Test(mw_malloc, zero_size)
+{
+    cr_assert_null(mw_malloc(0));
+    heap_layout_t heap_layout = {
+        {AVAILABLE, .payload_size = -1, .payload = NULL}
+    };
+    ASSERT_HEAP_EQ(heap_layout);
+}
+
 // Test(mw_free, basic)
 // {
 //     void *p = mw_malloc(10);

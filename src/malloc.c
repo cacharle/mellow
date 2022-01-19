@@ -64,11 +64,13 @@ split_block(block_t *block, size_t payload_size)
 {
     size_t new_block_size = payload_size + BLOCK_METADATA_SIZE;
     size_t prev_block_size = block_size(block);
+    block_t *block_prev = block->prev;
+    block_t *block_next = block->next;
     block_set_size(block, new_block_size | 1);
     block_t *rest = block_end(block);
     block_set_size(rest, prev_block_size - new_block_size);
-    rest->prev = block->prev;
-    rest->next = block->next;
+    rest->prev = block_prev;
+    rest->next = block_next;
     if (rest->prev != NULL)
         rest->prev->next = rest;
     else

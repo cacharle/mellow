@@ -4,7 +4,8 @@
 int
 main(void)
 {
-    mw_malloc(1);
+    void *p = mw_malloc(10);
+    mw_free(p);
     // mw_debug_show();
     // int *p = mw_malloc(10 * sizeof(int));
     // mw_debug_show();

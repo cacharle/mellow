@@ -13,6 +13,7 @@ allocate(void *addr, size_t size)
 {
     void *ret =
         mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
+    // TODO: limit process page to simulate failure
     if (ret == MAP_FAILED)
     {
         errno = ENOMEM;
@@ -38,9 +39,9 @@ heap_init(void)
 {
     heap_size = align(heap_size);
     mw_internals.heap = allocate(NULL, heap_size);
-    mw_internals.heap_size = heap_size;
     if (mw_internals.heap == NULL)
         return false;
+    mw_internals.heap_size = heap_size;
     mw_internals.free_list = mw_internals.heap;
     mw_internals.free_list->prev = NULL;
     mw_internals.free_list->next = NULL;
@@ -100,91 +101,4 @@ mw_malloc(size_t size)
     }
     split_block(block, size);
     return block_payload(block);
-}
-
-void
-mw_free(void *ptr)
-{
-    block_t *block = ptr - sizeof(size_t);
-    block_set_size(block, block_size(block));  // mark block as freed
-
-    if (block != mw_internals.heap)
-    {
-        // if block before is free coalesce
-        size_t prev_marked_size = *(size_t *)((void *)block - sizeof(size_t));
-        if (!(prev_marked_size & 1))
-        {
-            size_t prev_size = prev_marked_size & ~1;
-            size_t curr_size = block->size;
-            // remove prev from free list
-            block_t *prev_block = (void *)block - prev_size;
-            if (prev_block->prev != NULL)
-                prev_block->prev->next = prev_block->next;
-            else
-                mw_internals.free_list = prev_block->next;
-            if (prev_block->next != NULL)
-                prev_block->next->prev = prev_block->prev;
-            block = prev_block;
-            block_set_size(block, prev_size + curr_size);
-        }
-    }
-
-    if (block_end(block) != (void *)mw_internals.heap + mw_internals.heap_size)
-    {
-        // if block after is free coalesce
-        size_t next_marked_size = *(size_t *)block_end(block);
-        if (!(next_marked_size & 1))
-        {
-            size_t   next_size = next_marked_size & ~1;
-            size_t   curr_size = block->size;
-            block_t *next_block = block_end(block);
-            if (next_block->prev != NULL)
-                next_block->prev->next = next_block->next;
-            else
-                mw_internals.free_list = next_block->next;
-            if (next_block->next != NULL)
-                next_block->next->prev = next_block->prev;
-            block_set_size(block, next_size + curr_size);
-        }
-    }
-
-    // insert block in free list
-    block->prev = NULL;
-    block->next = mw_internals.free_list;
-    // if (mw_internals.free_list != NULL)
-    mw_internals.free_list->prev = block;
-    mw_internals.free_list = block;
-}
-
-/*
-void	*realloc(void *ptr, size_t size)
-{
-    block_t	*block;
-    void	*ret;
-
-    block = ptr - sizeof(block_t);
-    if (block->size >= size)
-        return (ptr);
-    ret = malloc(size);
-    ft_memcpy(ret, ptr, block->size);
-    return (ret);
-}  */
-
-/*
- * calloc isn't always the same as malloc+memset
- * - it checks for multiplication overflow
- * - TODO: on big allocations (when mmap forced), the system zeroes
- *   the allocation by itself already so calling memset is a wasteful
- *   (on small allocation, it is equivalent to malloc+memset)
- *   the system zeroes the pages for security reasons
- *   (sensitive information could still be there)
- */
-void *
-mw_calloc(size_t nmemb, size_t size)
-{
-    size_t ret_size = nmemb * size;
-    if (size == 0 || ret_size / size != nmemb)
-        return NULL;
-    void *ret = mw_malloc(ret_size);
-    return memset(ret, 0, ret_size);
 }

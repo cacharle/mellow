@@ -11,6 +11,7 @@
 #include <string.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
+#include <mellow/mellow.h>
 
 typedef struct block
 {

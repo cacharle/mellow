@@ -1,5 +1,8 @@
 sources = files(
-  'test_malloc.c'
+  'test_malloc.c',
+  'test_calloc.c',
+  'test_free.c',
+  'utils.c',
 )
 cc = meson.get_compiler('c')
 criterion_dep = cc.find_library('criterion', required : true)

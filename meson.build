@@ -10,3 +10,5 @@ incdir = include_directories('include')
 subdir('src')
 lib = library('mellow', sources, include_directories : incdir)
 subdir('examples')
+subdir('test')
+

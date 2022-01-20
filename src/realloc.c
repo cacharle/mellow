@@ -1,5 +1,7 @@
 #include "internals.h"
 
+// TODO: look into mremap for large allocations
+
 /*
 void	*realloc(void *ptr, size_t size)
 {

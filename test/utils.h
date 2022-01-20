@@ -6,15 +6,17 @@
 #include <criterion/criterion.h>
 #include "internals.h"
 
-enum block_state {
+enum block_state
+{
     AVAILABLE,
     OCCUPIED,
 };
 
-struct heap_layout_block {
+struct heap_layout_block
+{
     enum block_state state;
-    size_t payload_size;
-    void *payload;
+    size_t           payload_size;
+    void            *payload;
 };
 
 typedef struct heap_layout_block heap_layout_t[];
@@ -22,6 +24,7 @@ typedef struct heap_layout_block heap_layout_t[];
 void
 assert_heap_eq(heap_layout_t heap_layout, size_t heap_layout_len);
 
-#define ASSERT_HEAP_EQ(layout) assert_heap_eq(layout, sizeof(layout) / sizeof(layout[0]))
+#define ASSERT_HEAP_EQ(layout) \
+    assert_heap_eq(layout, sizeof(layout) / sizeof(layout[0]))
 
 #endif

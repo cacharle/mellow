@@ -11,14 +11,14 @@ assert_heap_eq(heap_layout_t heap_layout, size_t heap_layout_len)
     {
         if (heap_layout[i].payload_size != -1)
         {
-            cr_assert_eq(
-                block_payload_size(curr),
-                heap_layout[i].payload_size,
-                "block payload %zu != %zu",
-                block_payload_size(curr),
-                heap_layout[i].payload_size
-            );
-            cr_assert_eq(block_size(curr), heap_layout[i].payload_size + BLOCK_METADATA_SIZE);
+            cr_assert_eq(block_payload_size(curr),
+                         heap_layout[i].payload_size,
+                         "[%zu] block payload (actual) %zu != (expected) %zu",
+                         i,
+                         block_payload_size(curr),
+                         heap_layout[i].payload_size);
+            cr_assert_eq(block_size(curr),
+                         heap_layout[i].payload_size + BLOCK_METADATA_SIZE);
         }
         if (heap_layout[i].state == AVAILABLE)
             cr_assert(block_available(curr));
@@ -26,14 +26,10 @@ assert_heap_eq(heap_layout_t heap_layout, size_t heap_layout_len)
             cr_assert(!block_available(curr));
         if (heap_layout[i].payload != NULL)
         {
-            cr_assert_eq(
-                memcmp(
-                    block_payload(curr),
-                    heap_layout[i].payload,
-                    heap_layout[i].payload_size
-                ),
-                0
-            );
+            cr_assert_eq(memcmp(block_payload(curr),
+                                heap_layout[i].payload,
+                                heap_layout[i].payload_size),
+                         0);
         }
     }
 }

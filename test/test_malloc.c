@@ -11,8 +11,9 @@ Test(mw_malloc, basic)
     for (int i = 0; i < len; i++)
         p[i] = i * i;
     heap_layout_t heap_layout = {
-        {OCCUPIED, .payload_size = payload_size, .payload = p},
-        {AVAILABLE, .payload_size = -1, .payload = NULL}};
+        {OCCUPIED,  .payload_size = payload_size, .payload = p   },
+        {AVAILABLE, .payload_size = -1,           .payload = NULL}
+    };
     ASSERT_HEAP_EQ(heap_layout);
 }
 
@@ -28,12 +29,13 @@ Test(mw_malloc, array_2d)
         for (int j = 0; j < len; j++)
             p[i][j] = i * j;
     heap_layout_t heap_layout = {
-        {OCCUPIED, .payload_size = payload_size, .payload = p},
-        {OCCUPIED, .payload_size = row_payload_size, .payload = p[0]},
-        {OCCUPIED, .payload_size = row_payload_size, .payload = p[1]},
-        {OCCUPIED, .payload_size = row_payload_size, .payload = p[2]},
-        {OCCUPIED, .payload_size = row_payload_size, .payload = p[3]},
-        {AVAILABLE, .payload_size = -1, .payload = NULL}};
+        {OCCUPIED,  .payload_size = payload_size,     .payload = p   },
+        {OCCUPIED,  .payload_size = row_payload_size, .payload = p[0]},
+        {OCCUPIED,  .payload_size = row_payload_size, .payload = p[1]},
+        {OCCUPIED,  .payload_size = row_payload_size, .payload = p[2]},
+        {OCCUPIED,  .payload_size = row_payload_size, .payload = p[3]},
+        {AVAILABLE, .payload_size = -1,               .payload = NULL}
+    };
     ASSERT_HEAP_EQ(heap_layout);
 }
 
@@ -41,8 +43,10 @@ Test(mw_malloc, alignment_8)
 {
     size_t size = 7;
     mw_malloc(size);
-    heap_layout_t heap_layout = {{OCCUPIED, .payload_size = 8, .payload = NULL},
-                                 {AVAILABLE, .payload_size = -1, .payload = NULL}};
+    heap_layout_t heap_layout = {
+        {OCCUPIED,  .payload_size = 8,  .payload = NULL},
+        {AVAILABLE, .payload_size = -1, .payload = NULL}
+    };
     ASSERT_HEAP_EQ(heap_layout);
 }
 
@@ -50,8 +54,10 @@ Test(mw_malloc, alignment_16)
 {
     size_t size = 10;
     mw_malloc(size);
-    heap_layout_t heap_layout = {{OCCUPIED, .payload_size = 16, .payload = NULL},
-                                 {AVAILABLE, .payload_size = -1, .payload = NULL}};
+    heap_layout_t heap_layout = {
+        {OCCUPIED,  .payload_size = 16, .payload = NULL},
+        {AVAILABLE, .payload_size = -1, .payload = NULL}
+    };
     ASSERT_HEAP_EQ(heap_layout);
 }
 
@@ -59,15 +65,19 @@ Test(mw_malloc, alignment_32)
 {
     size_t size = 25;
     mw_malloc(size);
-    heap_layout_t heap_layout = {{OCCUPIED, .payload_size = 32, .payload = NULL},
-                                 {AVAILABLE, .payload_size = -1, .payload = NULL}};
+    heap_layout_t heap_layout = {
+        {OCCUPIED,  .payload_size = 32, .payload = NULL},
+        {AVAILABLE, .payload_size = -1, .payload = NULL}
+    };
     ASSERT_HEAP_EQ(heap_layout);
 }
 
 Test(mw_malloc, zero_size)
 {
     cr_assert_null(mw_malloc(0));
-    heap_layout_t heap_layout = {{AVAILABLE, .payload_size = -1, .payload = NULL}};
+    heap_layout_t heap_layout = {
+        {AVAILABLE, .payload_size = -1, .payload = NULL}
+    };
     ASSERT_HEAP_EQ(heap_layout);
 }
 
@@ -85,10 +95,10 @@ Test(mw_malloc, split_non_first_free_list)
     void *p5 = mw_malloc(64);
     cr_assert_eq(p5, p4);
     heap_layout_t heap_layout = {
-        {OCCUPIED, .payload_size = 32, .payload = NULL},
+        {OCCUPIED,  .payload_size = 32, .payload = NULL},
         {AVAILABLE, .payload_size = 32, .payload = NULL},
-        {OCCUPIED, .payload_size = 32, .payload = NULL},
-        {OCCUPIED, .payload_size = 64, .payload = p4},
+        {OCCUPIED,  .payload_size = 32, .payload = NULL},
+        {OCCUPIED,  .payload_size = 64, .payload = p4  },
         {AVAILABLE, .payload_size = -1, .payload = NULL},
     };
     ASSERT_HEAP_EQ(heap_layout);
@@ -107,16 +117,16 @@ Test(mw_malloc, block_no_free_list_last)
     uint64_t *p5 = mw_malloc(32);  // free_list -> (16) -> (32)
     memset(p5, 42, 32);
     heap_layout_t heap_layout = {
-        {AVAILABLE, .payload_size = 64, .payload = NULL},  // previous p1
-        {OCCUPIED, .payload_size = 64, .payload = NULL},   // p2
+        {AVAILABLE, .payload_size = 64,           .payload = NULL}, // previous p1
+        {OCCUPIED,  .payload_size = 64,           .payload = NULL}, // p2
         {OCCUPIED,
          .payload_size = 32,
-         .payload = p5},  //                      | both combined were p3
+         .payload = p5                                           }, //                      | both combined were p3
         {AVAILABLE,
          .payload_size = 32 - 2 * sizeof(size_t),
-         .payload = NULL},  // splitted rest by p5  |
-        {OCCUPIED, .payload_size = 64, .payload = p4},
-        {AVAILABLE, .payload_size = -1, .payload = NULL},
+         .payload = NULL                                         }, // splitted rest by p5  |
+        {OCCUPIED,  .payload_size = 64,           .payload = p4  },
+        {AVAILABLE, .payload_size = -1,           .payload = NULL},
     };
     ASSERT_HEAP_EQ(heap_layout);
 }
@@ -135,13 +145,13 @@ Test(mw_malloc, split_block_no_zero_size)
     memset(p5, 42, 16);
     mw_debug_show();
     heap_layout_t heap_layout = {
-        {AVAILABLE, .payload_size = 32, .payload = NULL},  // previous p1
-        {OCCUPIED, .payload_size = 32, .payload = NULL},   // p2
+        {AVAILABLE, .payload_size = 32, .payload = NULL}, // previous p1
+        {OCCUPIED,  .payload_size = 32, .payload = NULL}, // p2
         {OCCUPIED,
          .payload_size = 32,
-         .payload = p5},  // supposed to be split but the rest would have a payload
-                          // size of 0
-        {OCCUPIED, .payload_size = 32, .payload = p4},
+         .payload = p5                                 }, // supposed to be split but the rest would have a payload
+  // size of 0
+        {OCCUPIED,  .payload_size = 32, .payload = p4  },
         {AVAILABLE, .payload_size = -1, .payload = NULL},
     };
     ASSERT_HEAP_EQ(heap_layout);

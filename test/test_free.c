@@ -8,7 +8,9 @@ Test(mw_free, basic)
     void *p = mw_malloc(10);
     mw_free(p);
     cr_assert_not_null(mw_internals.free_list);
-    heap_layout_t heap_layout = {{AVAILABLE, .payload_size = -1, .payload = NULL}};
+    heap_layout_t heap_layout = {
+        {AVAILABLE, .payload_size = -1, .payload = NULL}
+    };
     ASSERT_HEAP_EQ(heap_layout);
 }
 
@@ -22,8 +24,8 @@ Test(mw_free, coalesce_before)
     memset(p3, 42, 10);
     heap_layout_t heap_layout = {
         {AVAILABLE, .payload_size = 48 + 2 * sizeof(size_t), .payload = NULL},
-        {OCCUPIED, .payload_size = 16, .payload = p3},
-        {AVAILABLE, .payload_size = -1, .payload = NULL},
+        {OCCUPIED,  .payload_size = 16,                      .payload = p3  },
+        {AVAILABLE, .payload_size = -1,                      .payload = NULL},
     };
     ASSERT_HEAP_EQ(heap_layout);
 }
@@ -38,8 +40,8 @@ Test(mw_free, coalesce_after)
     memset(p3, 42, 10);
     heap_layout_t heap_layout = {
         {AVAILABLE, .payload_size = 48 + 2 * sizeof(size_t), .payload = NULL},
-        {OCCUPIED, .payload_size = 16, .payload = p3},
-        {AVAILABLE, .payload_size = -1, .payload = NULL},
+        {OCCUPIED,  .payload_size = 16,                      .payload = p3  },
+        {AVAILABLE, .payload_size = -1,                      .payload = NULL},
     };
     ASSERT_HEAP_EQ(heap_layout);
 }

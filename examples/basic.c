@@ -3,8 +3,7 @@
 #include "mellow/mellow.h"
 #include "mellow/debug.h"
 
-int
-main(void)
+int main(void)
 {
     // void *p = mw_malloc(10);
     // mw_free(p);

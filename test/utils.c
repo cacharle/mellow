@@ -1,7 +1,8 @@
+#include <assert.h>
 #include "utils.h"
+#include "internals.h"
 
-void
-assert_heap_eq(heap_layout_t heap_layout, size_t heap_layout_len)
+void assert_heap_eq(heap_layout_t heap_layout, size_t heap_layout_len)
 {
     assert(heap_layout_len != 0);
     block_t *curr = mw_internals.heap;

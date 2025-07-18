@@ -2,6 +2,7 @@
 #include <stdckdint.h>
 
 #include "internals.h"
+#include <string.h>
 
 /*
  * calloc isn't always the same as malloc+memset
@@ -11,8 +12,7 @@
  *   the system zeroes the pages for security reasons
  *   (sensitive information could still be there)
  */
-void *
-mw_calloc(size_t nmemb, size_t size)
+void *mw_calloc(size_t nmemb, size_t size)
 {
     // nmemb or size can be 0, from the man page:
     // > If n or size is 0, then calloc() returns a unique pointer value that can

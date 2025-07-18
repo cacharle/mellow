@@ -4,11 +4,8 @@
 #define _XOPEN_SOURCE 500
 #define _DEFAULT_SOURCE  // needed for MAP_ANONYMOUS
 #include <unistd.h>
-#include <errno.h>
 #include <stddef.h>
 #include <stdbool.h>
-#include <stdint.h>
-#include <string.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
 #include <mellow/mellow.h>
@@ -64,19 +61,12 @@ extern struct mellow_internals mw_internals;
 **   if tiny or small zone are full reallocate a new zone
 */
 
-void
-block_set_size(block_t *block, size_t new_size);
-bool
-block_available(block_t *block);
-size_t
-block_size(block_t *block);
-size_t
-block_payload_size(block_t *block);
-void *
-block_end(block_t *block);
-size_t *
-block_footer(block_t *block);
-void *
-block_payload(block_t *block);
+void    block_set_size(block_t *block, size_t new_size);
+bool    block_available(block_t *block);
+size_t  block_size(block_t *block);
+size_t  block_payload_size(block_t *block);
+void   *block_end(block_t *block);
+size_t *block_footer(block_t *block);
+void   *block_payload(block_t *block);
 
 #endif

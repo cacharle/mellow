@@ -1,10 +1,10 @@
 #include <ctype.h>
+#include <stdint.h>
 
 #include "internals.h"
 #include "mellow/debug.h"
 
-void
-mw_debug_show(void)
+void mw_debug_show(void)
 {
     block_t *curr = mw_internals.heap;
     if (curr == NULL)
@@ -29,8 +29,7 @@ mw_debug_show(void)
     }
 }
 
-void
-mw_debug_show_memory(void)
+void mw_debug_show_memory(void)
 {
     block_t *curr;
 
@@ -73,8 +72,7 @@ mw_debug_show_memory(void)
     }
 }
 
-void
-mw_debug_show_free_list(void)
+void mw_debug_show_free_list(void)
 {
     for (block_t *block = mw_internals.free_list; block != NULL; block = block->next)
     {

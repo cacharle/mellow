@@ -1,3 +1,6 @@
+#include <stdint.h>
+#include <errno.h>
+
 #include <criterion/criterion.h>
 
 #include "mellow/mellow.h"

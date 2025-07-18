@@ -1,7 +1,6 @@
 #include "internals.h"
 
-void
-mw_free(void *ptr)
+void mw_free(void *ptr)
 {
     block_t *block = ptr - sizeof(size_t);
     block_set_size(block, block_size(block));  // mark block as freed

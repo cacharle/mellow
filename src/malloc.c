@@ -1,15 +1,14 @@
+#include <errno.h>
 #include "internals.h"
 
 static const size_t alignment_size = 8;
 
-static size_t
-align(size_t x)
+static size_t align(size_t x)
 {
     return (x + (alignment_size - 1)) & ~(alignment_size - 1);
 }
 
-static void *
-allocate(void *addr, size_t size)
+static void *allocate(void *addr, size_t size)
 {
     // TODO: consider using MAP_FIXED or MAP_FIXED_VALIDATE since we're supposed to
     // be the only one using mmap
@@ -39,8 +38,7 @@ struct mellow_internals mw_internals = {
 
 static size_t heap_size = 1 << 11;
 
-static bool
-heap_init(void)
+static bool heap_init(void)
 {
     heap_size = align(heap_size);
     mw_internals.heap = allocate(NULL, heap_size);
@@ -81,8 +79,9 @@ heap_init(void)
 //     return (true);
 // }
 
-static block_t *
-find_fit(size_t payload_size)
+// Iterate over the available blocks, returns the first one that has enough space for
+// the payload size
+static block_t *find_fit(size_t payload_size)
 {
     for (block_t *block = mw_internals.free_list; block != NULL; block = block->next)
     {
@@ -92,20 +91,22 @@ find_fit(size_t payload_size)
     return NULL;
 }
 
-static void
-split_block(block_t *block, size_t payload_size)
+static void split_block(block_t *block, size_t payload_size)
 {
     size_t   new_block_size = payload_size + BLOCK_METADATA_SIZE;
     size_t   prev_block_size = block_size(block);
     block_t *block_prev = block->prev;
     block_t *block_next = block->next;
-    block_set_size(block, new_block_size | 1);
+    block_set_size(block, new_block_size | 1);  // |1 for occupied
     block_t *rest = block_end(block);
     // if rest size < sizeof(block_t) + sizeof(size_t) + 16
     //     don't split, allocate whole block
     block_set_size(rest, prev_block_size - new_block_size);
+    // Setting the link to prev/next blocks of the one we're currently splitting to
+    // the space we don't use at the end.
     rest->prev = block_prev;
     rest->next = block_next;
+    // Also updating the prev/next blocks pointer to the rest
     if (rest->prev != NULL)
         rest->prev->next = rest;
     else
@@ -114,8 +115,7 @@ split_block(block_t *block, size_t payload_size)
         rest->next->prev = rest;
 }
 
-void *
-mw_malloc(size_t size)
+void *mw_malloc(size_t size)
 {
     if (mw_internals.heap == NULL)
     {

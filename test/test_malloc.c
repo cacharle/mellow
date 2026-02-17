@@ -44,7 +44,7 @@ Test(mw_malloc, array_2d)
 Test(mw_malloc, alignment_8)
 {
     size_t size = 7;
-    mw_malloc(size);
+    cr_assert_not_null(mw_malloc(size));
     heap_layout_t heap_layout = {
         {OCCUPIED,  .payload_size = 8,  .payload = NULL},
         {AVAILABLE, .payload_size = -1, .payload = NULL}
@@ -55,7 +55,7 @@ Test(mw_malloc, alignment_8)
 Test(mw_malloc, alignment_16)
 {
     size_t size = 10;
-    mw_malloc(size);
+    cr_assert_not_null(mw_malloc(size));
     heap_layout_t heap_layout = {
         {OCCUPIED,  .payload_size = 16, .payload = NULL},
         {AVAILABLE, .payload_size = -1, .payload = NULL}
@@ -66,7 +66,7 @@ Test(mw_malloc, alignment_16)
 Test(mw_malloc, alignment_32)
 {
     size_t size = 25;
-    mw_malloc(size);
+    cr_assert_not_null(mw_malloc(size));
     heap_layout_t heap_layout = {
         {OCCUPIED,  .payload_size = 32, .payload = NULL},
         {AVAILABLE, .payload_size = -1, .payload = NULL}
@@ -76,8 +76,9 @@ Test(mw_malloc, alignment_32)
 
 Test(mw_malloc, zero_size)
 {
-    cr_assert_null(mw_malloc(0));
+    cr_assert_not_null(mw_malloc(0));
     heap_layout_t heap_layout = {
+        {OCCUPIED,  .payload_size = 0,  .payload = NULL},
         {AVAILABLE, .payload_size = -1, .payload = NULL}
     };
     ASSERT_HEAP_EQ(heap_layout);
@@ -151,7 +152,8 @@ Test(mw_malloc, block_no_free_list_last)
 //         {OCCUPIED,  .payload_size = 32, .payload = NULL}, // p2
 //         {OCCUPIED,
 //          .payload_size = 32,
-//          .payload = p5                                 }, // supposed to be split but the rest would have a payload
+//          .payload = p5                                 }, // supposed to be split
+//          but the rest would have a payload
 //   // size of 0
 //         {OCCUPIED,  .payload_size = 32, .payload = p4  },
 //         {AVAILABLE, .payload_size = -1, .payload = NULL},

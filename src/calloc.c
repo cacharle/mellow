@@ -18,7 +18,7 @@ mw_calloc(size_t nmemb, size_t size)
     // > If n or size is 0, then calloc() returns a unique pointer value that can
     // > later be successfully passed to free()
     size_t ret_size;
-    bool overflowed = ckd_mul(&ret_size, nmemb, size);
+    bool   overflowed = ckd_mul(&ret_size, nmemb, size);
     if (overflowed)
         return NULL;
     void *ret = mw_malloc(ret_size);

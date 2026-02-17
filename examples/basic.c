@@ -4,8 +4,8 @@
 int
 main(void)
 {
-    void *p = mw_malloc(10);
-    mw_free(p);
+    // void *p = mw_malloc(10);
+    // mw_free(p);
     // mw_debug_show();
     // int *p = mw_malloc(10 * sizeof(int));
     // mw_debug_show();
@@ -29,7 +29,6 @@ main(void)
     void *p2 = mw_malloc(32);
     void *p3 = mw_malloc(32);
     void *p4 = mw_malloc(32);
-    // (void)p2;
     mw_free(p1);  // free_list -> p1(32)
     mw_free(p3);  // free_list -> p3(32) -> p1(32)
     //                                //               v-- split_block with
@@ -37,5 +36,8 @@ main(void)
     void *p5 = mw_malloc(16);  // free_list -> (16) -> (32)
     // memset(p5, 42, 16);
     mw_debug_show();
+    // (void)p2;
+    // (void)p4;
+    // (void)p5;
     return 0;
 }

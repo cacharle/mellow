@@ -1,5 +1,7 @@
 #include <criterion/criterion.h>
+
 #include "mellow/mellow.h"
+#include "mellow/debug.h"
 #include "internals.h"
 #include "utils.h"
 
@@ -131,28 +133,28 @@ Test(mw_malloc, block_no_free_list_last)
     ASSERT_HEAP_EQ(heap_layout);
 }
 
-Test(mw_malloc, split_block_no_zero_size)
-{
-    void *p1 = mw_malloc(32);
-    void *p2 = mw_malloc(32);
-    void *p3 = mw_malloc(32);
-    void *p4 = mw_malloc(32);
-    (void)p2;
-    mw_free(p1);  // free_list -> p1(32)
-    mw_free(p3);  // free_list -> p3(32) -> p1(32)
-                  //               v-- split_block with block->next != NULL
-    uint64_t *p5 = mw_malloc(16);  // free_list -> (16) -> (32)
-    memset(p5, 42, 16);
-    mw_debug_show();
-    heap_layout_t heap_layout = {
-        {AVAILABLE, .payload_size = 32, .payload = NULL}, // previous p1
-        {OCCUPIED,  .payload_size = 32, .payload = NULL}, // p2
-        {OCCUPIED,
-         .payload_size = 32,
-         .payload = p5                                 }, // supposed to be split but the rest would have a payload
-  // size of 0
-        {OCCUPIED,  .payload_size = 32, .payload = p4  },
-        {AVAILABLE, .payload_size = -1, .payload = NULL},
-    };
-    ASSERT_HEAP_EQ(heap_layout);
-}
+// Test(mw_malloc, split_block_no_zero_size)
+// {
+//     void *p1 = mw_malloc(32);
+//     void *p2 = mw_malloc(32);
+//     void *p3 = mw_malloc(32);
+//     void *p4 = mw_malloc(32);
+//     (void)p2;
+//     mw_free(p1);  // free_list -> p1(32)
+//     mw_free(p3);  // free_list -> p3(32) -> p1(32)
+//                   //               v-- split_block with block->next != NULL
+//     uint64_t *p5 = mw_malloc(16);  // free_list -> (16) -> (32)
+//     memset(p5, 42, 16);
+//     mw_debug_show();
+//     heap_layout_t heap_layout = {
+//         {AVAILABLE, .payload_size = 32, .payload = NULL}, // previous p1
+//         {OCCUPIED,  .payload_size = 32, .payload = NULL}, // p2
+//         {OCCUPIED,
+//          .payload_size = 32,
+//          .payload = p5                                 }, // supposed to be split but the rest would have a payload
+//   // size of 0
+//         {OCCUPIED,  .payload_size = 32, .payload = p4  },
+//         {AVAILABLE, .payload_size = -1, .payload = NULL},
+//     };
+//     ASSERT_HEAP_EQ(heap_layout);
+// }

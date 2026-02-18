@@ -5,7 +5,7 @@
 
 void
 mw_debug_show(void);
-// void
-// mw_show_alloc_mem_ex(void);
+void
+mw_debug_show_memory(void);
 
 #endif

@@ -1,3 +1,5 @@
+#include <ctype.h>
+
 #include "internals.h"
 #include "mellow/debug.h"
 
@@ -27,41 +29,47 @@ mw_debug_show(void)
     }
 }
 
-/* void
-show_alloc_mem_ex(void)
+void
+mw_debug_show_memory(void)
 {
     block_t *curr;
 
     curr = mw_internals.heap;
     if (curr == NULL)
     {
-        ft_putendl_fd("malloc: couldn't show uninitalized heap", STDERR_FILENO);
+        fputs("mellow: couldn't show uninitalized heap", stderr);
         return;
     }
-    while ((void *)curr < mw_internals.heap_last)
+    for (size_t i = 0;
+         (void *)curr < (void *)mw_internals.heap + mw_internals.heap_size;
+         curr = block_end(curr), i++)
     {
-        ft_putnbr_base(curr, 16);
-        ft_putstr(" - ");
-        ft_putnbr_base(curr + curr->size, 16);
-        ft_putstr(" : ");
-        ft_putnbr_base(curr->size & ~1, 10);
-        ft_putendl(" bytes");
+        fprintf(stderr,
+                "mellow: block %zu: %p -> %p | %zu %s\n",
+                i,
+                (void *)curr + sizeof(size_t),
+                block_end(curr) - sizeof(size_t),
+                block_payload_size(curr),
+                block_available(curr) ? "(available)" : "(occupied)");
+        if (block_end(curr) >= (void *)mw_internals.heap + mw_internals.heap_size)
+            break;
 
-        uint8_t *data = (uint8_t *)curr;
-        size_t   offset = 0;
-        while (offset < curr->size)
+        void  *payload = block_payload(curr);
+        size_t payload_size = block_payload_size(curr);
+        for (size_t offset = 0; offset < payload_size; offset++)
         {
-            if (offset % 16 == 0)
+            if (offset % 64 == 0)
             {
-                ft_putstr("| ");
-                ft_putnbr_base(offset, 16);
-                ft_putstr("  ");
+                if (offset != 0)
+                    fputc('\n', stderr);
+                fprintf(stderr, "| %4zu | ", offset);
             }
-            ft_putnbr_base(data[offset], 16);
-            if (offset % 8 == 0)
-                ft_putchar(' ');
-            offset++;
+            int c = ((uint8_t *)payload)[offset];
+            if (isalnum(c))
+                fprintf(stderr, "%c", c);
+            else
+                fputc('.', stderr);
         }
-        curr = curr + curr->size;
+        fputs("\n-------------------------------------------------\n", stderr);
     }
-} */
+}

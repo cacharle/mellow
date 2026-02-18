@@ -13,6 +13,8 @@
 #include <sys/resource.h>
 #include <mellow/mellow.h>
 
+// An available block has a prev and next pointer to the previous and next available
+// blocks If the block is occupied, the prev/next pointers are part of the payload
 typedef struct block
 {
     size_t        size;
@@ -20,6 +22,7 @@ typedef struct block
     struct block *next;
 } block_t;
 
+// Metadata of an occupied payload (size of it at the start and end of it
 #define BLOCK_METADATA_SIZE (2 * sizeof(size_t))
 
 struct zone

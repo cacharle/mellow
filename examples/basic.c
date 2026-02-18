@@ -1,3 +1,5 @@
+#include <string.h>
+
 #include "mellow/mellow.h"
 #include "mellow/debug.h"
 
@@ -34,8 +36,10 @@ main(void)
     //                                //               v-- split_block with
     //                                block->next != NULL
     void *p5 = mw_malloc(16);  // free_list -> (16) -> (32)
-    // memset(p5, 42, 16);
-    mw_debug_show();
+    memset(p5, 'a', 8);
+    memset(p5 + 8, 'b', 8);
+    // mw_debug_show();
+    mw_debug_show_memory();
     // (void)p2;
     // (void)p4;
     // (void)p5;

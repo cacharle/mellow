@@ -21,6 +21,9 @@ typedef struct block
 
 // Metadata of an occupied payload (size of it at the start and end of it
 #define BLOCK_METADATA_SIZE (2 * sizeof(size_t))
+#define BLOCK_AVAILABLE_METADATA_SIZE \
+    (2 * sizeof(size_t) + 2 * sizeof(struct block *))
+#define BLOCK_AVAILABLE_MIN_PAYLOAD_SIZE (2 * sizeof(struct block *))
 
 struct zone
 {

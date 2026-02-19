@@ -24,4 +24,6 @@ void assert_heap_eq(heap_layout_t heap_layout, size_t heap_layout_len);
 #define ASSERT_HEAP_EQ(layout) \
     assert_heap_eq(layout, sizeof(layout) / sizeof(layout[0]))
 
+void check_valid_free_list();
+
 #endif

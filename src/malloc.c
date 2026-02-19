@@ -1,4 +1,5 @@
 #include <errno.h>
+
 #include "internals.h"
 
 static const size_t alignment_size = 8;
@@ -95,12 +96,27 @@ static void split_block(block_t *block, size_t payload_size)
 {
     size_t   new_block_size = payload_size + BLOCK_METADATA_SIZE;
     size_t   current_block_size = block_size(block);
+    size_t   rest_size = current_block_size - new_block_size;
     block_t *block_prev = block->prev;
     block_t *block_next = block->next;
-    block_set_size(block, new_block_size | 1);  // |1 for occupied
+    // If the would-be rest is too small, just take ownership of the whole current
+    // block and remove outselfs from the free list
+    if (rest_size < BLOCK_AVAILABLE_METADATA_SIZE)
+    {
+        new_block_size = current_block_size;
+        block_set_size(block, new_block_size | 1);
+        if (block_prev != NULL)
+            block_prev->next = block_next;
+        if (block_next != NULL)
+            block_next->prev = block_prev;
+        if (block_prev == NULL)
+            mw_internals.free_list = block_next;
+        return;
+    }
+
+    // Resizing the block and marking it as occupied
+    block_set_size(block, new_block_size | 1);
     block_t *rest = block_end(block);
-    // TODO: if rest size < sizeof(block_t) + sizeof(size_t) + 16
-    //     don't split, allocate whole block
     block_set_size(rest, current_block_size - new_block_size);
     // Setting the link to prev/next blocks of the one we're currently splitting to
     // the space we don't use at the end.
@@ -109,10 +125,11 @@ static void split_block(block_t *block, size_t payload_size)
     // Also updating the prev/next blocks pointer to the rest
     if (rest->prev != NULL)
         rest->prev->next = rest;
-    else
-        mw_internals.free_list = rest;
     if (rest->next != NULL)
         rest->next->prev = rest;
+    // Set the rest block as the start of the free list if its prev pointer is NULL
+    if (rest->prev == NULL)
+        mw_internals.free_list = rest;
 }
 
 void *mw_malloc(size_t size)
@@ -123,9 +140,10 @@ void *mw_malloc(size_t size)
             return NULL;
     }
     size = align(size);
-    // Ensure there is always space for the free list pointers in the payload once the block is freed
-    if (size < sizeof(void*) * 2)
-        size = sizeof(void*) * 2;
+    // Ensure there is always space for the free list pointers in the payload once
+    // the block is freed
+    if (size < BLOCK_AVAILABLE_MIN_PAYLOAD_SIZE)
+        size = BLOCK_AVAILABLE_MIN_PAYLOAD_SIZE;
     block_t *block = find_fit(size);
     if (block == NULL)
     {

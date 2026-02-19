@@ -34,3 +34,10 @@ void assert_heap_eq(heap_layout_t heap_layout, size_t heap_layout_len)
         }
     }
 }
+
+void check_valid_free_list()
+{
+    // Passes if this doesn't crash :D
+    for (block_t *block = mw_internals.free_list; block != NULL; block = block->next)
+        ;
+}

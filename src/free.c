@@ -1,4 +1,5 @@
 #include "internals.h"
+#include <stdio.h>
 
 void mw_free(void *ptr)
 {

@@ -50,7 +50,7 @@ Test(mw_malloc, alignment_8)
     cr_assert_not_null(mw_malloc(size));
     heap_layout_t heap_layout = {
         //                          vv resized to 32
-        {OCCUPIED,  .payload_size = 32,  .payload = NULL},
+        {OCCUPIED,  .payload_size = 32, .payload = NULL},
         {AVAILABLE, .payload_size = -1, .payload = NULL}
     };
     ASSERT_HEAP_EQ(heap_layout);
@@ -83,7 +83,7 @@ Test(mw_malloc, zero_size)
     cr_assert_not_null(mw_malloc(0));
     heap_layout_t heap_layout = {
         // 16 is the minimum payload size (for the free list pointers)
-        {OCCUPIED,  .payload_size = 16,  .payload = NULL},
+        {OCCUPIED,  .payload_size = 16, .payload = NULL},
         {AVAILABLE, .payload_size = -1, .payload = NULL}
     };
     ASSERT_HEAP_EQ(heap_layout);
@@ -150,25 +150,21 @@ Test(mw_malloc, split_block_no_zero_size)
     memset(p3, '3', 32);
     memset(p4, '4', 32);
     (void)p2;
-    mw_free(p1);  // free_list -> p1(32)
-    mw_free(p3);  // free_list -> p3(32) -> p1(32)
-                  //               v-- split_block with block->next != NULL
-    // uint64_t *p5 = mw_malloc(1);  // free_list -> (16) -> (32)
-    // memset(p5, '5', 32);
-    mw_debug_show();
-    mw_debug_show_free_list();
-    // heap_layout_t heap_layout = {
-    //     {AVAILABLE, .payload_size = 32, .payload = NULL}, // previous p1
-    //     {OCCUPIED,  .payload_size = 32, .payload = NULL}, // p2
-    //     {OCCUPIED,
-    //      .payload_size = 32,
-    //      .payload = p5                                 }, // supposed to be split
-    //      but the rest would have a payload size of 0
-    //     {OCCUPIED,  .payload_size = 32, .payload = p4  },
-    //     {AVAILABLE, .payload_size = -1, .payload = NULL},
-    // };
-    // ASSERT_HEAP_EQ(heap_layout);
-    cr_assert(false);
+    mw_free(p1);                   // free_list -> p1(32)
+    mw_free(p3);                   // free_list -> p3(32) -> p1(32)
+                                   // v-- split_block with block->next != NULL
+    uint64_t *p5 = mw_malloc(16);  // free_list -> (16) -> (32)
+    memset(p5, '5', 32);
+    heap_layout_t heap_layout = {
+        {AVAILABLE, .payload_size = 32, .payload = NULL}, // previous p1
+        {OCCUPIED,  .payload_size = 32, .payload = NULL}, // p2
+        // supposed to be split but the rest would have a payload size of 0
+        {OCCUPIED,  .payload_size = 32, .payload = p5  },
+        {OCCUPIED,  .payload_size = 32, .payload = p4  },
+        {AVAILABLE, .payload_size = -1, .payload = NULL},
+    };
+    ASSERT_HEAP_EQ(heap_layout);
+    check_valid_free_list();
 }
 
 Test(mw_malloc, out_of_memory)

@@ -46,10 +46,11 @@ Test(mw_malloc, array_2d)
 
 Test(mw_malloc, alignment_8)
 {
-    size_t size = 7;
+    size_t size = 31;
     cr_assert_not_null(mw_malloc(size));
     heap_layout_t heap_layout = {
-        {OCCUPIED,  .payload_size = 8,  .payload = NULL},
+        //                          vv resized to 32
+        {OCCUPIED,  .payload_size = 32,  .payload = NULL},
         {AVAILABLE, .payload_size = -1, .payload = NULL}
     };
     ASSERT_HEAP_EQ(heap_layout);
@@ -81,7 +82,8 @@ Test(mw_malloc, zero_size)
 {
     cr_assert_not_null(mw_malloc(0));
     heap_layout_t heap_layout = {
-        {OCCUPIED,  .payload_size = 0,  .payload = NULL},
+        // 16 is the minimum payload size (for the free list pointers)
+        {OCCUPIED,  .payload_size = 16,  .payload = NULL},
         {AVAILABLE, .payload_size = -1, .payload = NULL}
     };
     ASSERT_HEAP_EQ(heap_layout);

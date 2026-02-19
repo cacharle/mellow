@@ -45,7 +45,7 @@ void mw_free(void *ptr)
         }
     }
 
-    // insert block in free list
+    // insert block at the start free list
     block->prev = NULL;
     block->next = mw_internals.free_list;
     if (mw_internals.free_list != NULL)

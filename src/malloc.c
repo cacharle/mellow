@@ -94,14 +94,14 @@ static block_t *find_fit(size_t payload_size)
 static void split_block(block_t *block, size_t payload_size)
 {
     size_t   new_block_size = payload_size + BLOCK_METADATA_SIZE;
-    size_t   prev_block_size = block_size(block);
+    size_t   current_block_size = block_size(block);
     block_t *block_prev = block->prev;
     block_t *block_next = block->next;
     block_set_size(block, new_block_size | 1);  // |1 for occupied
     block_t *rest = block_end(block);
-    // if rest size < sizeof(block_t) + sizeof(size_t) + 16
+    // TODO: if rest size < sizeof(block_t) + sizeof(size_t) + 16
     //     don't split, allocate whole block
-    block_set_size(rest, prev_block_size - new_block_size);
+    block_set_size(rest, current_block_size - new_block_size);
     // Setting the link to prev/next blocks of the one we're currently splitting to
     // the space we don't use at the end.
     rest->prev = block_prev;
@@ -123,6 +123,9 @@ void *mw_malloc(size_t size)
             return NULL;
     }
     size = align(size);
+    // Ensure there is always space for the free list pointers in the payload once the block is freed
+    if (size < sizeof(void*) * 2)
+        size = sizeof(void*) * 2;
     block_t *block = find_fit(size);
     if (block == NULL)
     {

@@ -17,7 +17,7 @@ mw_debug_show(void)
          curr = block_end(curr), i++)
     {
         fprintf(stderr,
-                "mellow: block %zu: %p -> %p (%p -> %p) | %zu (%zu) %s\n",
+                "Block %zu: %p -> %p (%p -> %p) | %zu (%zu) %s\n",
                 i,
                 (void *)curr + sizeof(size_t),
                 block_end(curr) - sizeof(size_t),
@@ -45,7 +45,7 @@ mw_debug_show_memory(void)
          curr = block_end(curr), i++)
     {
         fprintf(stderr,
-                "mellow: block %zu: %p -> %p | %zu %s\n",
+                "Block %zu: %p -> %p | %zu %s\n",
                 i,
                 (void *)curr + sizeof(size_t),
                 block_end(curr) - sizeof(size_t),
@@ -70,5 +70,19 @@ mw_debug_show_memory(void)
                 fputc('.', stderr);
         }
         fputs("\n-------------------------------------------------\n", stderr);
+    }
+}
+
+void
+mw_debug_show_free_list(void)
+{
+    for (block_t *block = mw_internals.free_list; block != NULL; block = block->next)
+    {
+        fprintf(stderr,
+                "Available block: %14p <- %p -> %14p | %zu\n",
+                block->prev,
+                block,
+                block->next,
+                block_payload_size(block));
     }
 }

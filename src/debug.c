@@ -51,11 +51,10 @@ mw_debug_show_memory(void)
                 block_end(curr) - sizeof(size_t),
                 block_payload_size(curr),
                 block_available(curr) ? "(available)" : "(occupied)");
-        if (block_end(curr) >= (void *)mw_internals.heap + mw_internals.heap_size)
-            break;
-
         void  *payload = block_payload(curr);
         size_t payload_size = block_payload_size(curr);
+        if (payload_size > 256)
+            break;
         for (size_t offset = 0; offset < payload_size; offset++)
         {
             if (offset % 64 == 0)

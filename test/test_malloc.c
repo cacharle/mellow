@@ -140,23 +140,38 @@ Test(mw_malloc, block_no_free_list_last)
 //     void *p2 = mw_malloc(32);
 //     void *p3 = mw_malloc(32);
 //     void *p4 = mw_malloc(32);
+//     memset(p1, '1', 32);
+//     memset(p2, '2', 32);
+//     memset(p3, '3', 32);
+//     memset(p4, '4', 32);
 //     (void)p2;
 //     mw_free(p1);  // free_list -> p1(32)
 //     mw_free(p3);  // free_list -> p3(32) -> p1(32)
 //                   //               v-- split_block with block->next != NULL
 //     uint64_t *p5 = mw_malloc(16);  // free_list -> (16) -> (32)
-//     memset(p5, 42, 16);
-//     mw_debug_show();
-//     heap_layout_t heap_layout = {
-//         {AVAILABLE, .payload_size = 32, .payload = NULL}, // previous p1
-//         {OCCUPIED,  .payload_size = 32, .payload = NULL}, // p2
-//         {OCCUPIED,
-//          .payload_size = 32,
-//          .payload = p5                                 }, // supposed to be split
-//          but the rest would have a payload
-//   // size of 0
-//         {OCCUPIED,  .payload_size = 32, .payload = p4  },
-//         {AVAILABLE, .payload_size = -1, .payload = NULL},
-//     };
-//     ASSERT_HEAP_EQ(heap_layout);
+//     // memset(p5, '5', 32);
+//     mw_debug_show_memory();
+//     // heap_layout_t heap_layout = {
+//     //     {AVAILABLE, .payload_size = 32, .payload = NULL}, // previous p1
+//     //     {OCCUPIED,  .payload_size = 32, .payload = NULL}, // p2
+//     //     {OCCUPIED,
+//     //      .payload_size = 32,
+//     //      .payload = p5                                 }, // supposed to be split but the rest would have a payload size of 0
+//     //     {OCCUPIED,  .payload_size = 32, .payload = p4  },
+//     //     {AVAILABLE, .payload_size = -1, .payload = NULL},
+//     // };
+//     // ASSERT_HEAP_EQ(heap_layout);
+//     cr_assert(false);
 // }
+
+Test(mw_malloc, out_of_memory)
+{
+    const struct rlimit rlimit = {
+        .rlim_cur = 32,
+        .rlim_max = 32,
+    };
+    setrlimit(RLIMIT_AS, &rlimit);
+    void *p = mw_malloc(64);
+    cr_assert_null(p);
+    cr_assert_eq(errno, ENOMEM);
+}

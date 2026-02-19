@@ -11,7 +11,7 @@ align(size_t x)
 static void *
 allocate(void *addr, size_t size)
 {
-    // TODO: consider using MAP_FIXED or MAP_FIXED_VALIDATE since where supposed to
+    // TODO: consider using MAP_FIXED or MAP_FIXED_VALIDATE since we're supposed to
     // be the only one using mmap
     //       still compatible with libc if we replace malloc with mw_malloc
     void *ret =

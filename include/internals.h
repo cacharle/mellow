@@ -3,12 +3,15 @@
 
 #define _XOPEN_SOURCE 500
 #define _DEFAULT_SOURCE  // needed for MAP_ANONYMOUS
-#include <unistd.h>
-#include <stddef.h>
+#include <assert.h>
+#include <errno.h>
+#include <mellow/mellow.h>
 #include <stdbool.h>
+#include <stddef.h>
+#include <stdio.h>
 #include <sys/mman.h>
 #include <sys/resource.h>
-#include <mellow/mellow.h>
+#include <unistd.h>
 
 // An available block has a prev and next pointer to the previous and next available
 // blocks If the block is occupied, the prev/next pointers are part of the payload
@@ -41,7 +44,7 @@ struct mellow_internals
 extern struct mellow_internals mw_internals;
 
 #define MW_ALIGNMENT_SIZE 8
-#define MW_HEAP_CHUNK_SIZE (1 << 11)
+#define MW_HEAP_CHUNK_SIZE (1 << 12)
 #if MW_HEAP_CHUNK_SIZE % MW_ALIGNMENT_SIZE != 0
 #error "Invalid heap size"
 #endif

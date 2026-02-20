@@ -188,3 +188,10 @@ Test(mw_malloc, grow_heap_if_block_doesnt_fit_with_some_other_blocks_before)
     cr_assert_not_null(p);
     check_valid_free_list();
 }
+
+// Test(mw_malloc, grow_heap_with_2_times_the_chunk_size)
+// {
+//     void *p = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
+//     cr_assert_not_null(p);
+//     check_valid_free_list();
+// }

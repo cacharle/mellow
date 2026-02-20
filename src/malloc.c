@@ -1,6 +1,3 @@
-#include <assert.h>
-#include <errno.h>
-
 #include "internals.h"
 
 static size_t align(size_t x)
@@ -53,6 +50,7 @@ struct mellow_internals mw_internals = {
 
 static bool heap_init(void)
 {
+    assert(MW_HEAP_CHUNK_SIZE % getpagesize() == 0);
     mw_internals.heap = system_allocate(MW_HEAP_CHUNK_SIZE);
     if (mw_internals.heap == NULL)
         return false;

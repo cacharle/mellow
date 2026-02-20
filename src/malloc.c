@@ -1,30 +1,44 @@
+#include <assert.h>
 #include <errno.h>
 
 #include "internals.h"
 
-static const size_t alignment_size = 8;
-
 static size_t align(size_t x)
 {
-    return (x + (alignment_size - 1)) & ~(alignment_size - 1);
+    return (x + (MW_ALIGNMENT_SIZE - 1)) & ~(MW_ALIGNMENT_SIZE - 1);
 }
 
-static void *allocate(void *addr, size_t size)
+#define MW_MMAP_PROTECTION_FLAGS (PROT_READ | PROT_WRITE)
+#define MW_MMAP_FLAGS (MAP_PRIVATE | MAP_ANONYMOUS)
+
+static void *system_allocate(size_t size)
 {
-    // TODO: consider using MAP_FIXED or MAP_FIXED_VALIDATE since we're supposed to
-    // be the only one using mmap
-    //       still compatible with libc if we replace malloc with mw_malloc
-    void *ret =
-        mmap(addr, size, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
-    // TODO: limit process page to simulate failure
-    //       const struct rlimit rlimit = { .rlim_cur = 3000 };
-    //       setrlimit(RLIMIT_DATA, &rlimit);
+    void *ret = mmap(NULL, size, MW_MMAP_PROTECTION_FLAGS, MW_MMAP_FLAGS, -1, 0);
     if (ret == MAP_FAILED)
     {
         errno = ENOMEM;
         return NULL;
     }
     return ret;
+}
+
+// TODO: consider using MAP_FIXED or MAP_FIXED_VALIDATE since we're supposed to
+// be the only one using mmap
+static void *
+system_allocate_with_hint(void *addr_hint, size_t size, bool *hint_followed)
+{
+    void *ret = mmap(
+        addr_hint, size, MW_MMAP_PROTECTION_FLAGS, MW_MMAP_FLAGS | MAP_FIXED, -1, 0);
+    if (ret != MAP_FAILED)
+    {
+        *hint_followed = true;
+        return ret;
+    }
+    else
+    {
+        *hint_followed = false;
+        return system_allocate(size);
+    }
 }
 
 // struct zone zones[2] = {
@@ -37,48 +51,65 @@ struct mellow_internals mw_internals = {
     .free_list = NULL,
 };
 
-static size_t heap_size = 1 << 11;
-
 static bool heap_init(void)
 {
-    heap_size = align(heap_size);
-    mw_internals.heap = allocate(NULL, heap_size);
+    mw_internals.heap = system_allocate(MW_HEAP_CHUNK_SIZE);
     if (mw_internals.heap == NULL)
         return false;
-    mw_internals.heap_size = heap_size;
+    mw_internals.heap_size = MW_HEAP_CHUNK_SIZE;
     mw_internals.free_list = mw_internals.heap;
     mw_internals.free_list->prev = NULL;
     mw_internals.free_list->next = NULL;
-    block_set_size(mw_internals.free_list, heap_size);
+    block_set_size(mw_internals.free_list, MW_HEAP_CHUNK_SIZE);
     return true;
 }
 
-// NOTE: mallocng in musl uses some kind of meta area (should look into that)
-
 // NOTE: could use available size flags to indicate wheather block is first/last
-// bool
-// grow_heap(void)
-// {
-//     block_t *last;
-//
-//     if (g_heap == NULL)
-//     {
-//         if ((g_heap = allocate(NULL, CHUNK_SIZE)) == NULL)
-//             return (false);
-//         g_heap->size = 0;
-//         g_heap->next = g_heap;
-//         g_heap->prev = g_heap;
-//     }
-//     last = g_heap;
-//     while (last->next != NULL)
-//         last = last->next;
-//     last->next = allocate(g_heap + CHUNK_SIZE, CHUNK_SIZE);
-//     if (last->next == NULL)
-//         return (false);
-//     last->next->prev = last;
-//     last->next->next = NULL;
-//     return (true);
-// }
+static bool grow_heap(void)
+{
+    assert(mw_internals.heap != NULL);
+    void *last_addr = mw_internals.heap + mw_internals.heap_size;
+    bool  hint_followed;
+    void *new_chunk =
+        system_allocate_with_hint(last_addr, MW_HEAP_CHUNK_SIZE, &hint_followed);
+    if (new_chunk == NULL)
+        return false;
+    // The allocated addess is right after the current heap
+    if (hint_followed)
+    {
+        // If the last block is available, extend that block with the new chunk
+        size_t last_block_size = *((size_t *)(last_addr - sizeof(size_t)));
+        if (!(last_block_size & 1))
+        {
+            block_t *last_block = last_addr - last_block_size;
+            block_set_size(last_block, last_block_size + MW_HEAP_CHUNK_SIZE);
+        }
+        // Otherwise, the new chunk is a new available block and we add it to the
+        // free list
+        else
+        {
+            block_t *new_chunk_block = new_chunk;
+            block_set_size(new_chunk_block, MW_HEAP_CHUNK_SIZE);
+            // Push it to the start of the free list
+            new_chunk_block->prev = NULL;
+            new_chunk_block->next = mw_internals.free_list;
+            new_chunk_block->next->prev = new_chunk_block;
+            mw_internals.free_list = new_chunk_block;
+        }
+    }
+    // When the hint isn't followed, we also just add the chunk to the free list
+    else
+    {
+        block_t *new_chunk_block = new_chunk;
+        block_set_size(new_chunk_block, MW_HEAP_CHUNK_SIZE);
+        // Push it to the start of the free list
+        new_chunk_block->prev = NULL;
+        new_chunk_block->next = mw_internals.free_list;
+        new_chunk_block->next->prev = new_chunk_block;
+        mw_internals.free_list = new_chunk_block;
+    }
+    return true;
+}
 
 // Iterate over the available blocks, returns the first one that has enough space for
 // the payload size
@@ -147,10 +178,11 @@ void *mw_malloc(size_t size)
     block_t *block = find_fit(size);
     if (block == NULL)
     {
-        // if (!grow_heap())
-        // 	return (NULL);
-        // block = find_fit(size);
-        return NULL;
+        if (!grow_heap())
+            return NULL;
+        block = find_fit(size);
+        if (block == NULL)
+            return NULL;
     }
     split_block(block, size);
     return block_payload(block);

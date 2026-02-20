@@ -1,6 +1,7 @@
 #include "internals.h"
 #include <stdio.h>
 
+// TODO: munmap when last free is called
 void mw_free(void *ptr)
 {
     block_t *block = ptr - sizeof(size_t);

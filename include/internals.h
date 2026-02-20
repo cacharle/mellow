@@ -40,6 +40,12 @@ struct mellow_internals
 
 extern struct mellow_internals mw_internals;
 
+#define MW_ALIGNMENT_SIZE 8
+#define MW_HEAP_CHUNK_SIZE (1 << 11)
+#if MW_HEAP_CHUNK_SIZE % MW_ALIGNMENT_SIZE != 0
+#error "Invalid heap size"
+#endif
+
 /*
  * small is the page size
  * tiny  is the page size >> 4

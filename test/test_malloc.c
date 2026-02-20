@@ -178,3 +178,13 @@ Test(mw_malloc, out_of_memory)
     cr_assert_null(p);
     cr_assert_eq(errno, ENOMEM);
 }
+
+Test(mw_malloc, grow_heap_if_block_doesnt_fit_with_some_other_blocks_before)
+{
+    (void)mw_malloc(256);
+    (void)mw_malloc(256);
+    void *p = mw_malloc(MW_HEAP_CHUNK_SIZE -
+                        128);  // Fits in a chunk so allocating a new chunk will work
+    cr_assert_not_null(p);
+    check_valid_free_list();
+}

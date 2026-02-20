@@ -77,7 +77,7 @@ void mw_debug_show_free_list(void)
     for (block_t *block = mw_internals.free_list; block != NULL; block = block->next)
     {
         fprintf(stderr,
-                "Available block: %14p <- %p -> %14p | %zu\n",
+                "Available block: %14p <- %p -> %-14p | %zu\n",
                 block->prev,
                 block,
                 block->next,

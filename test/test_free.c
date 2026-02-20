@@ -12,6 +12,7 @@ Test(mw_free, basic)
         {AVAILABLE, .payload_size = -1, .payload = NULL}
     };
     ASSERT_HEAP_EQ(heap_layout);
+    check_valid_free_list();
 }
 
 Test(mw_free, coalesce_before)
@@ -28,6 +29,7 @@ Test(mw_free, coalesce_before)
         {AVAILABLE, .payload_size = -1,                      .payload = NULL},
     };
     ASSERT_HEAP_EQ(heap_layout);
+    check_valid_free_list();
 }
 
 Test(mw_free, coalesce_after)
@@ -44,6 +46,7 @@ Test(mw_free, coalesce_after)
         {AVAILABLE, .payload_size = -1,                      .payload = NULL},
     };
     ASSERT_HEAP_EQ(heap_layout);
+    check_valid_free_list();
 }
 
 Test(mw_free, coalesce_before_after)
@@ -58,4 +61,5 @@ Test(mw_free, coalesce_before_after)
         {AVAILABLE, .payload_size = -1, .payload = NULL},
     };
     ASSERT_HEAP_EQ(heap_layout);
+    check_valid_free_list();
 }

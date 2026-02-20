@@ -183,10 +183,22 @@ Test(mw_malloc, grow_heap_if_block_doesnt_fit_with_some_other_blocks_before)
 {
     (void)mw_malloc(256);
     (void)mw_malloc(256);
-    void *p = mw_malloc(MW_HEAP_CHUNK_SIZE -
-                        128);  // Fits in a chunk so allocating a new chunk will work
+    // Fits in a chunk so allocating a new chunk will work
+    void *p = mw_malloc(MW_HEAP_CHUNK_SIZE - 128);
     cr_assert_not_null(p);
     check_valid_free_list();
+}
+
+Test(mw_malloc, grow_heap_with_a_lot_of_mid_size_allocations)
+{
+    size_t size = MW_HEAP_CHUNK_SIZE / 4;
+    cr_assert_not_null(mw_malloc(size));
+    cr_assert_not_null(mw_malloc(size));
+    cr_assert_not_null(mw_malloc(size));
+    cr_assert_not_null(mw_malloc(size));  // Should grow here
+    cr_assert_not_null(mw_malloc(size));
+    cr_assert_not_null(mw_malloc(size));
+    cr_assert_not_null(mw_malloc(size));  // Should grow here again
 }
 
 // Test(mw_malloc, grow_heap_with_2_times_the_chunk_size)

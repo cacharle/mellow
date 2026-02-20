@@ -39,6 +39,7 @@ struct mellow_internals
     block_t *heap;
     size_t   heap_size;
     block_t *free_list;
+    size_t   page_size;
 };
 
 extern struct mellow_internals mw_internals;

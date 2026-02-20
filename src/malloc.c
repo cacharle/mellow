@@ -8,9 +8,9 @@ static size_t align(size_t x)
 #define MW_MMAP_PROTECTION_FLAGS (PROT_READ | PROT_WRITE)
 #define MW_MMAP_FLAGS (MAP_PRIVATE | MAP_ANONYMOUS)
 
-static void *system_allocate(size_t size)
+static void *mw_mmap(void *addr_hint, size_t size)
 {
-    void *ret = mmap(NULL, size, MW_MMAP_PROTECTION_FLAGS, MW_MMAP_FLAGS, -1, 0);
+    void *ret = mmap(addr_hint, size, MW_MMAP_PROTECTION_FLAGS, MW_MMAP_FLAGS, -1, 0);
     if (ret == MAP_FAILED)
     {
         errno = ENOMEM;
@@ -19,23 +19,25 @@ static void *system_allocate(size_t size)
     return ret;
 }
 
-// TODO: consider using MAP_FIXED or MAP_FIXED_VALIDATE since we're supposed to
-// be the only one using mmap
+static void *system_allocate(size_t size)
+{
+    return mw_mmap(NULL, size);
+}
+
 static void *
 system_allocate_with_hint(void *addr_hint, size_t size, bool *hint_followed)
 {
-    void *ret = mmap(
-        addr_hint, size, MW_MMAP_PROTECTION_FLAGS, MW_MMAP_FLAGS | MAP_FIXED, -1, 0);
-    if (ret != MAP_FAILED)
-    {
-        *hint_followed = true;
-        return ret;
-    }
-    else
-    {
-        *hint_followed = false;
-        return system_allocate(size);
-    }
+    // Using MAP_FIXED uses addr_hint as the start address no matter what, which can
+    // clobber memory that was asigned to other things (threads, stacks, etc..)
+    // Using MAP_FIXED_NOREPLACE is the same as MAP_FIXED but fails if addr_hint is
+    // already in use
+    // Using the addr_hint alone and handling when it's not followed is the best
+    // course of action
+    void *ret = mw_mmap(addr_hint, size);
+    *hint_followed = ret == addr_hint;
+    if (ret == NULL)
+        return NULL;
+    return ret;
 }
 
 // struct zone zones[2] = {
@@ -50,7 +52,8 @@ struct mellow_internals mw_internals = {
 
 static bool heap_init(void)
 {
-    assert(MW_HEAP_CHUNK_SIZE % getpagesize() == 0);
+    mw_internals.page_size = getpagesize();
+    assert(MW_HEAP_CHUNK_SIZE % mw_internals.page_size == 0);
     mw_internals.heap = system_allocate(MW_HEAP_CHUNK_SIZE);
     if (mw_internals.heap == NULL)
         return false;
@@ -66,7 +69,8 @@ static bool heap_init(void)
 static bool grow_heap(void)
 {
     assert(mw_internals.heap != NULL);
-    void *last_addr = mw_internals.heap + mw_internals.heap_size;
+    void *last_addr = ((void *)mw_internals.heap) + mw_internals.heap_size;
+    assert((size_t)last_addr % mw_internals.page_size == 0);
     bool  hint_followed;
     void *new_chunk =
         system_allocate_with_hint(last_addr, MW_HEAP_CHUNK_SIZE, &hint_followed);

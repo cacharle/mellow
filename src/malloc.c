@@ -10,7 +10,8 @@ static size_t align(size_t x)
 
 static void *mw_mmap(void *addr_hint, size_t size)
 {
-    void *ret = mmap(addr_hint, size, MW_MMAP_PROTECTION_FLAGS, MW_MMAP_FLAGS, -1, 0);
+    void *ret =
+        mmap(addr_hint, size, MW_MMAP_PROTECTION_FLAGS, MW_MMAP_FLAGS, -1, 0);
     if (ret == MAP_FAILED)
     {
         errno = ENOMEM;

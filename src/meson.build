@@ -4,4 +4,5 @@ sources = files(
   'malloc.c',
   'free.c',
   'calloc.c',
+  'realloc.c',
 )

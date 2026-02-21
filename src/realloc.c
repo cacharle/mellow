@@ -1,17 +1,32 @@
+#include <string.h>
+
 #include "internals.h"
 
 // TODO: look into mremap for large allocations
 
-/*
-void	*realloc(void *ptr, size_t size)
+void *mw_realloc(void *ptr, size_t size)
 {
-    block_t	*block;
-    void	*ret;
+    block_t *block;
+    void    *ret;
 
+    if (ptr == NULL)
+        return mw_malloc(size);
+    if (size == 0)
+    {
+        mw_free(ptr);
+        return NULL;
+    }
     block = ptr - sizeof(block_t);
     if (block->size >= size)
-        return (ptr);
-    ret = malloc(size);
-    ft_memcpy(ret, ptr, block->size);
-    return (ret);
-}  */
+        return ptr;
+
+    // TODO: use internals to try to expand the block if it can be done
+    // if (next block available) {
+    //      split next block and expand the current one with the first half
+    // }
+
+    ret = mw_malloc(size);
+    memcpy(ret, ptr, block->size);
+    mw_free(ptr);
+    return ret;
+}

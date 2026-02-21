@@ -1,6 +1,6 @@
 project(
   'mellow',
-  'c',
+  ['c', 'cpp'],
   default_options : ['c_std=c99'],
   # c_args : ['Wall', 'Wextra']
 )
@@ -13,4 +13,4 @@ subdir('src')
 lib = library('mellow', sources, include_directories : incdir)
 subdir('examples')
 subdir('test')
-
+subdir('benchmark')

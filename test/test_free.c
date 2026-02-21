@@ -1,4 +1,5 @@
 #include <criterion/criterion.h>
+
 #include "mellow/mellow.h"
 #include "internals.h"
 #include "utils.h"

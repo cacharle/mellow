@@ -2,6 +2,7 @@ sources = files(
   'test_malloc.c',
   'test_calloc.c',
   'test_free.c',
+  'test_llm.c',
   'utils.c',
 )
 cc = meson.get_compiler('c')

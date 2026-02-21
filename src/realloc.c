@@ -16,8 +16,8 @@ void *mw_realloc(void *ptr, size_t size)
         mw_free(ptr);
         return NULL;
     }
-    block = ptr - sizeof(block_t);
-    if (block->size >= size)
+    block = ptr - sizeof(size_t);
+    if (block_size(block) >= size)
         return ptr;
 
     // TODO: use internals to try to expand the block if it can be done
@@ -26,7 +26,7 @@ void *mw_realloc(void *ptr, size_t size)
     // }
 
     ret = mw_malloc(size);
-    memcpy(ret, ptr, block->size);
+    memcpy(ret, ptr, block_payload_size(block));
     mw_free(ptr);
     return ret;
 }

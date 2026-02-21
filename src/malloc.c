@@ -134,7 +134,7 @@ static void split_block(block_t *block, size_t payload_size)
     block_t *block_prev = block->prev;
     block_t *block_next = block->next;
     // If the would-be rest is too small, just take ownership of the whole current
-    // block and remove outselfs from the free list
+    // block and remove ourselfs from the free list
     if (rest_size < BLOCK_AVAILABLE_METADATA_SIZE)
     {
         new_block_size = current_block_size;
@@ -151,7 +151,7 @@ static void split_block(block_t *block, size_t payload_size)
     // Resizing the block and marking it as occupied
     block_set_size(block, new_block_size | 1);
     block_t *rest = block_end(block);
-    block_set_size(rest, current_block_size - new_block_size);
+    block_set_size(rest, rest_size);
     // Setting the link to prev/next blocks of the one we're currently splitting to
     // the space we don't use at the end.
     rest->prev = block_prev;

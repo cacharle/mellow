@@ -80,6 +80,6 @@ one is to just insert it at the beginning.
 - [ ] Establish allocation zones (max payload size per zone)
 - [x] Optimize calloc with large payloads that need a dedicated mmap, the
   system already zeroes the memory for us
-- [ ] Test realloc
+- [x] Test realloc
 - [ ] Optimize realloc
 - [ ] reallocarray (same as realloc but checks for multiplication overflows)

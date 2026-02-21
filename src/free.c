@@ -4,6 +4,8 @@
 // TODO: munmap when last free is called
 void mw_free(void *ptr)
 {
+    if (ptr == NULL)
+        return;
     block_t *block = ptr - sizeof(size_t);
 
     // Check if ptr is a large block

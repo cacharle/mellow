@@ -64,6 +64,11 @@ Test(mw_free, coalesce_before_after)
     check_valid_free_list();
 }
 
+Test(mw_free, can_free_null)
+{
+    mw_free(NULL);
+}
+
 Test(mw_free, large_block)
 {
     void *p = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);

@@ -63,3 +63,23 @@ if they are also free, if so, we can coalesce them with the current block.
 
 There are various ways of inserting back a block in the free list, the simplest
 one is to just insert it at the beginning.
+
+### TODO:
+
+- [x] Dedicated mmap for too large payloads
+- [ ] Test if allocating with hint works
+- [ ] Free everything with munmap at the end
+- [ ] Keep track of allocated chunks
+- [ ] Add a fuzzer to catch every edge case
+
+#### Secondary
+
+- [ ] Create benchmark comparing libc's malloc/free to mine (there is mimalloc and jmalloc aswell)
+- [ ] Benchmark resident memory aswell since I assume it's easy to be fast if
+  you just allocate a lot of memory beforehand
+- [ ] Establish allocation zones (max payload size per zone)
+- [ ] Optimize calloc with large payloads that need a dedicated mmap, the
+  system already zeroes the memory for us
+- [ ] Test realloc
+- [ ] Optimize realloc
+- [ ] reallocarray (same as realloc but checks for multiplication overflows)

@@ -63,3 +63,27 @@ Test(mw_free, coalesce_before_after)
     ASSERT_HEAP_EQ(heap_layout);
     check_valid_free_list();
 }
+
+Test(mw_free, large_block)
+{
+    void *p = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
+    cr_assert_not_null(p);
+    mw_free(p);
+    cr_assert_null(mw_internals.large_blocks);
+}
+
+Test(mw_free, multiple_large_block)
+{
+    void *p1 = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
+    void *p2 = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
+    void *p3 = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
+    cr_assert_not_null(p1);
+    cr_assert_not_null(p2);
+    cr_assert_not_null(p3);
+    mw_free(p2);
+    cr_assert_not_null(mw_internals.large_blocks);
+    mw_free(p1);
+    cr_assert_not_null(mw_internals.large_blocks);
+    mw_free(p3);
+    cr_assert_null(mw_internals.large_blocks);
+}

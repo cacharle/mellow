@@ -28,11 +28,13 @@ typedef struct block
     (2 * sizeof(size_t) + 2 * sizeof(struct block *))
 #define BLOCK_AVAILABLE_MIN_PAYLOAD_SIZE (2 * sizeof(struct block *))
 
-struct zone
+typedef struct large_block
 {
-    size_t pages;
-    size_t bytes;
-};
+    struct large_block *prev;
+    struct large_block *next;
+    size_t size;  // HAS to be the last element to be compatible with an allocated
+                  // block (which starts at ptr - sizeof(size_t)
+} large_block_t;
 
 struct mellow_internals
 {
@@ -40,39 +42,18 @@ struct mellow_internals
     size_t   heap_size;
     block_t *free_list;
     size_t   page_size;
+    large_block_t
+        *large_blocks;  // Blocks which don't fit in a chunk get a dedicated mmap
 };
 
 extern struct mellow_internals mw_internals;
 
 #define MW_ALIGNMENT_SIZE 8
-#define MW_HEAP_CHUNK_SIZE (1 << 12)
+#define MW_HEAP_CHUNK_SIZE (1 << 14)
 #if MW_HEAP_CHUNK_SIZE % MW_ALIGNMENT_SIZE != 0
 #error "Invalid heap size"
 #endif
-
-/*
- * small is the page size
- * tiny  is the page size >> 4
- * If getpagesize() doesn't work use these macro instead
- */
-
-// #define SMALL_DEFAULT_BLOCK_SIZE 4096
-// #define TINY_DEFAULT_BLOCK_SIZE 256
-
-// #define ZONE_BLOCK_COUNT 100
-
-/*
-** 3 zones:
-**   - tiny  > 0   <= 256
-**   - small > 256 <= page size
-**   - large > page size
-**
-**   - tiny  preallocate 100 max size block
-**   - small preallocate 100 max size block
-**   - large malloc is just mmap
-**
-**   if tiny or small zone are full reallocate a new zone
-*/
+#define MW_CHUNK_MAX_BLOCK_SIZE (MW_HEAP_CHUNK_SIZE - BLOCK_METADATA_SIZE)
 
 void    block_set_size(block_t *block, size_t new_size);
 bool    block_available(block_t *block);
@@ -81,5 +62,6 @@ size_t  block_payload_size(block_t *block);
 void   *block_end(block_t *block);
 size_t *block_footer(block_t *block);
 void   *block_payload(block_t *block);
+void   *large_block_payload(large_block_t *block);
 
 #endif

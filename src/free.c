@@ -5,8 +5,23 @@
 void mw_free(void *ptr)
 {
     block_t *block = ptr - sizeof(size_t);
-    block_set_size(block, block_size(block));  // mark block as freed
 
+    // Check if ptr is a large block
+    if (block_size(block) > MW_CHUNK_MAX_BLOCK_SIZE)
+    {
+        large_block_t *large_block = ptr - sizeof(large_block_t);
+        // Remove the block from the large blocks list
+        if (large_block->prev != NULL)
+            large_block->prev->next = large_block->next;
+        if (large_block->next != NULL)
+            large_block->next->prev = large_block->prev;
+        if (large_block == mw_internals.large_blocks)
+            mw_internals.large_blocks = NULL;
+        munmap(large_block, large_block->size);
+        return;
+    }
+
+    block_set_size(block, block_size(block));  // mark block as freed
     if (block != mw_internals.heap)
     {
         // if block before is free coalesce

@@ -35,3 +35,9 @@ void *block_payload(block_t *block)
 {
     return (void *)block + sizeof(size_t);
 }
+
+// Large blocks have the previous and next pointers even when occupied
+void *large_block_payload(large_block_t *block)
+{
+    return (void *)block + sizeof(large_block_t);
+}

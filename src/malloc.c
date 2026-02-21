@@ -168,6 +168,21 @@ static void split_block(block_t *block, size_t payload_size)
 
 void *mw_malloc(size_t size)
 {
+    // Allocate a large block if size cannot fit in one chunk
+    if (size > MW_CHUNK_MAX_BLOCK_SIZE)
+    {
+        large_block_t *large_block = system_allocate(size + sizeof(large_block_t));
+        if (large_block == NULL)
+            return NULL;
+        large_block->size = size;
+        large_block->prev = NULL;
+        large_block->next = mw_internals.large_blocks;
+        if (mw_internals.large_blocks != NULL)
+            mw_internals.large_blocks->prev = large_block;
+        mw_internals.large_blocks = large_block;
+        return large_block_payload(large_block);
+    }
+
     if (mw_internals.heap == NULL)
     {
         if (!heap_init())

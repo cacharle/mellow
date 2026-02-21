@@ -78,7 +78,7 @@ one is to just insert it at the beginning.
 - [ ] Benchmark resident memory aswell since I assume it's easy to be fast if
   you just allocate a lot of memory beforehand
 - [ ] Establish allocation zones (max payload size per zone)
-- [ ] Optimize calloc with large payloads that need a dedicated mmap, the
+- [x] Optimize calloc with large payloads that need a dedicated mmap, the
   system already zeroes the memory for us
 - [ ] Test realloc
 - [ ] Optimize realloc

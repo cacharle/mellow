@@ -4,14 +4,6 @@
 #include "internals.h"
 #include <string.h>
 
-/*
- * calloc isn't always the same as malloc+memset
- * - TODO: on big allocations (when mmap forced), the system zeroes
- *   the allocation by itself already so calling memset is a wasteful
- *   (on small allocation, it is equivalent to malloc+memset)
- *   the system zeroes the pages for security reasons
- *   (sensitive information could still be there)
- */
 void *mw_calloc(size_t nmemb, size_t size)
 {
     // nmemb or size can be 0, from the man page:
@@ -24,5 +16,8 @@ void *mw_calloc(size_t nmemb, size_t size)
     void *ret = mw_malloc(ret_size);
     if (ret == NULL)
         return NULL;
+    if (size > MW_CHUNK_MAX_BLOCK_SIZE)  // No need to zero out the memory for large
+                                         // blocks since mmap does it for us
+        return ret;
     return memset(ret, 0, ret_size);
 }

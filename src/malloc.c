@@ -41,42 +41,46 @@ system_allocate_with_hint(void *addr_hint, size_t size, bool *hint_followed)
     return ret;
 }
 
-// struct zone zones[2] = {
-//     { .bytes = 256 },
-//     { .bytes = 4096 },
-// };
-
 struct mellow_internals mw_internals = {
-    .heap = NULL,
+    .chunks = NULL,
     .free_list = NULL,
+    .page_size = 0,
+    .large_blocks = NULL,
 };
 
 static bool heap_init(void)
 {
     mw_internals.page_size = getpagesize();
-    assert(MW_HEAP_CHUNK_SIZE % mw_internals.page_size == 0);
-    mw_internals.heap = system_allocate(MW_HEAP_CHUNK_SIZE);
-    if (mw_internals.heap == NULL)
+    assert(MW_CHUNK_SIZE % mw_internals.page_size == 0);
+    mw_internals.chunks = system_allocate(MW_CHUNK_SIZE);
+    if (mw_internals.chunks == NULL)
         return false;
-    mw_internals.heap_size = MW_HEAP_CHUNK_SIZE;
-    mw_internals.free_list = mw_internals.heap;
+    mw_internals.chunks->size = MW_CHUNK_SIZE;
+    mw_internals.chunks->next = NULL;
+    // mw_internals.chunks->start = (void*)mw_internals.chunks +
+    // mw_internals.chunks->size; block_set_size(mw_internals.chunks->start,
+    // MW_CHUNK_SIZE - MW_CHUNK_METADATA_SIZE);
+    mw_internals.free_list = &mw_internals.chunks->start;
     mw_internals.free_list->prev = NULL;
     mw_internals.free_list->next = NULL;
-    block_set_size(mw_internals.free_list, MW_HEAP_CHUNK_SIZE);
+    block_set_size(mw_internals.free_list, MW_CHUNK_SIZE - MW_CHUNK_METADATA_SIZE);
     return true;
 }
 
 // NOTE: could use available size flags to indicate wheather block is first/last
 static bool grow_heap(void)
 {
-    assert(mw_internals.heap != NULL);
-    void *last_addr = ((void *)mw_internals.heap) + mw_internals.heap_size;
+    assert(mw_internals.chunks != NULL);
+    void *last_addr = ((void *)mw_internals.chunks) + mw_internals.chunks->size;
     assert((size_t)last_addr % mw_internals.page_size == 0);
-    bool  hint_followed;
-    void *new_chunk =
-        system_allocate_with_hint(last_addr, MW_HEAP_CHUNK_SIZE, &hint_followed);
+    bool     hint_followed;
+    chunk_t *new_chunk =
+        system_allocate_with_hint(last_addr, MW_CHUNK_SIZE, &hint_followed);
     if (new_chunk == NULL)
         return false;
+    new_chunk->size = MW_CHUNK_SIZE;
+    new_chunk->next = mw_internals.chunks;
+    mw_internals.chunks = new_chunk;
     // The allocated addess is right after the current heap
     if (hint_followed)
     {
@@ -85,14 +89,14 @@ static bool grow_heap(void)
         if (!(last_block_size & 1))
         {
             block_t *last_block = last_addr - last_block_size;
-            block_set_size(last_block, last_block_size + MW_HEAP_CHUNK_SIZE);
+            block_set_size(last_block, last_block_size + MW_CHUNK_SIZE);
         }
         // Otherwise, the new chunk is a new available block and we add it to the
         // free list
         else
         {
-            block_t *new_chunk_block = new_chunk;
-            block_set_size(new_chunk_block, MW_HEAP_CHUNK_SIZE);
+            block_t *new_chunk_block = &new_chunk->start;
+            block_set_size(new_chunk_block, MW_CHUNK_SIZE - MW_CHUNK_METADATA_SIZE);
             // Push it to the start of the free list
             new_chunk_block->prev = NULL;
             new_chunk_block->next = mw_internals.free_list;
@@ -103,8 +107,8 @@ static bool grow_heap(void)
     // When the hint isn't followed, we also just add the chunk to the free list
     else
     {
-        block_t *new_chunk_block = new_chunk;
-        block_set_size(new_chunk_block, MW_HEAP_CHUNK_SIZE);
+        block_t *new_chunk_block = &new_chunk->start;
+        block_set_size(new_chunk_block, MW_CHUNK_SIZE - MW_CHUNK_METADATA_SIZE);
         // Push it to the start of the free list
         new_chunk_block->prev = NULL;
         new_chunk_block->next = mw_internals.free_list;
@@ -183,7 +187,7 @@ void *mw_malloc(size_t size)
         return large_block_payload(large_block);
     }
 
-    if (mw_internals.heap == NULL)
+    if (mw_internals.chunks == NULL)
     {
         if (!heap_init())
             return NULL;

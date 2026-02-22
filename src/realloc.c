@@ -17,7 +17,7 @@ void *mw_realloc(void *ptr, size_t size)
     block_t *block = ptr - sizeof(size_t);
     // Return the existing block if the size is reduced since there is already enough
     // space But try to split the rest into a new available block to save the space
-    if (block_size(block) >= size)
+    if (block_payload_size(block) >= size)
     {
         size_t new_block_size = size + BLOCK_METADATA_SIZE;
         size_t rest_size = block_size(block) - new_block_size;
@@ -34,7 +34,6 @@ void *mw_realloc(void *ptr, size_t size)
         }
         return ptr;
     }
-
     // TODO: use internals to try to expand the block if it can be done
     // if (next block available) {
     //      split next block and expand the current one with the first half

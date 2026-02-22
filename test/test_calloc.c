@@ -29,7 +29,7 @@ Test(mw_calloc, overflow)
 
 Test(mw_calloc, large_block)
 {
-    size_t size = MW_HEAP_CHUNK_SIZE * 2 - 124;
+    size_t size = MW_CHUNK_SIZE * 2 - 124;
     char  *p = mw_calloc(size, sizeof(char));
     cr_assert_not_null(p);
     for (size_t i = 0; i < size; i++)

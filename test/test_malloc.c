@@ -184,14 +184,14 @@ Test(mw_malloc, grow_heap_if_block_doesnt_fit_with_some_other_blocks_before)
     (void)mw_malloc(256);
     (void)mw_malloc(256);
     // Fits in a chunk so allocating a new chunk will work
-    void *p = mw_malloc(MW_HEAP_CHUNK_SIZE - 128);
+    void *p = mw_malloc(MW_CHUNK_SIZE - 128);
     cr_assert_not_null(p);
     check_valid_free_list();
 }
 
 Test(mw_malloc, grow_heap_with_a_lot_of_mid_size_allocations)
 {
-    size_t size = MW_HEAP_CHUNK_SIZE / 4;
+    size_t size = MW_CHUNK_SIZE / 4;
     cr_assert_not_null(mw_malloc(size));
     cr_assert_not_null(mw_malloc(size));
     cr_assert_not_null(mw_malloc(size));
@@ -203,19 +203,19 @@ Test(mw_malloc, grow_heap_with_a_lot_of_mid_size_allocations)
 
 Test(mw_malloc, large_block)
 {
-    void *p = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
+    void *p = mw_malloc(MW_CHUNK_SIZE * 2 - 124);
     cr_assert_not_null(p);
     cr_assert_not_null(mw_internals.large_blocks);
     cr_assert_null(mw_internals.large_blocks->prev);
     cr_assert_null(mw_internals.large_blocks->next);
-    cr_assert_null(mw_internals.heap);  // Heap shouldn't even be allocated
+    cr_assert_null(mw_internals.chunks);  // Heap shouldn't even be allocated
 }
 
 Test(mw_malloc, multiple_large_block)
 {
-    void *p1 = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
-    void *p2 = mw_malloc(MW_HEAP_CHUNK_SIZE * 3 - 124);
-    void *p3 = mw_malloc(MW_HEAP_CHUNK_SIZE * 4 - 124);
+    void *p1 = mw_malloc(MW_CHUNK_SIZE * 2 - 124);
+    void *p2 = mw_malloc(MW_CHUNK_SIZE * 3 - 124);
+    void *p3 = mw_malloc(MW_CHUNK_SIZE * 4 - 124);
     cr_assert_not_null(p1);
     cr_assert_not_null(p2);
     cr_assert_not_null(p3);
@@ -223,5 +223,5 @@ Test(mw_malloc, multiple_large_block)
     cr_assert_null(mw_internals.large_blocks->prev);
     cr_assert_not_null(mw_internals.large_blocks->next);
     cr_assert_not_null(mw_internals.large_blocks->next->prev);
-    cr_assert_null(mw_internals.heap);
+    cr_assert_null(mw_internals.chunks);
 }

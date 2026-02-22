@@ -6,14 +6,14 @@
 
 void mw_debug_show(void)
 {
-    block_t *curr = mw_internals.heap;
+    block_t *curr = &mw_internals.chunks->start;
     if (curr == NULL)
     {
         fputs("mellow: cannot show uninitalized heap\n", stderr);
         return;
     }
-    for (size_t i = 0;
-         (void *)curr < (void *)mw_internals.heap + mw_internals.heap_size;
+    for (size_t i = 0; (void *)curr < (void *)&mw_internals.chunks->start +
+                                          mw_internals.chunks->size;
          curr = block_end(curr), i++)
     {
         fprintf(stderr,
@@ -31,16 +31,14 @@ void mw_debug_show(void)
 
 void mw_debug_show_memory(void)
 {
-    block_t *curr;
-
-    curr = mw_internals.heap;
+    block_t *curr = &mw_internals.chunks->start;
     if (curr == NULL)
     {
         fputs("mellow: couldn't show uninitalized heap", stderr);
         return;
     }
-    for (size_t i = 0;
-         (void *)curr < (void *)mw_internals.heap + mw_internals.heap_size;
+    for (size_t i = 0; (void *)curr < (void *)&mw_internals.chunks->start +
+                                          mw_internals.chunks->size;
          curr = block_end(curr), i++)
     {
         fprintf(stderr,

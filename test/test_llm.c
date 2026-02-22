@@ -74,9 +74,9 @@ Test(llm, free_all_then_reallocate)
 
 Test(llm, large_block_middle_removal)
 {
-    void *a = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
-    void *b = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
-    void *c = mw_malloc(MW_HEAP_CHUNK_SIZE * 2 - 124);
+    void *a = mw_malloc(MW_CHUNK_SIZE * 2 - 124);
+    void *b = mw_malloc(MW_CHUNK_SIZE * 2 - 124);
+    void *c = mw_malloc(MW_CHUNK_SIZE * 2 - 124);
     mw_free(b);
     cr_assert_not_null(mw_internals.large_blocks);
     cr_assert_null(mw_internals.large_blocks->prev);
@@ -89,7 +89,7 @@ Test(llm, large_block_middle_removal)
 
 Test(llm, no_cross_chunk_coalesce, .disabled = true)
 {
-    size_t big = MW_HEAP_CHUNK_SIZE / 2;
+    size_t big = MW_CHUNK_SIZE / 2;
     void  *a = mw_malloc(big);
     void  *b = mw_malloc(big);
     void  *c = mw_malloc(big);  // forces second chunk

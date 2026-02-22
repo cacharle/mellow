@@ -24,7 +24,7 @@ void mw_free(void *ptr)
     }
 
     block_set_size(block, block_size(block));  // mark block as freed
-    if (block != mw_internals.heap)
+    if (block != &mw_internals.chunks->start)  // TODO: block_chunk_boundary(block)
     {
         // if block before is free coalesce
         size_t prev_marked_size = *(size_t *)((void *)block - sizeof(size_t));
@@ -45,7 +45,8 @@ void mw_free(void *ptr)
         }
     }
 
-    if (block_end(block) != (void *)mw_internals.heap + mw_internals.heap_size)
+    if (block_end(block) !=
+        (void *)&mw_internals.chunks->start + mw_internals.chunks->size)
     {
         // if block after is free coalesce
         size_t next_marked_size = *(size_t *)block_end(block);

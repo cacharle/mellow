@@ -13,7 +13,7 @@ void mw_debug_show(void)
         return;
     }
     for (size_t i = 0; (void *)curr < (void *)&mw_internals.chunks->start +
-                                          mw_internals.chunks->size;
+                                          MW_CHUNK_SIZE;
          curr = block_end(curr), i++)
     {
         fprintf(stderr,
@@ -38,7 +38,7 @@ void mw_debug_show_memory(void)
         return;
     }
     for (size_t i = 0; (void *)curr < (void *)&mw_internals.chunks->start +
-                                          mw_internals.chunks->size;
+                                          MW_CHUNK_SIZE;
          curr = block_end(curr), i++)
     {
         fprintf(stderr,

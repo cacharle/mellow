@@ -7,7 +7,7 @@ void assert_heap_eq(heap_layout_t heap_layout, size_t heap_layout_len)
     assert(heap_layout_len != 0);
     block_t *curr = &mw_internals.chunks->start;
     for (size_t i = 0;
-         (void *)curr < (void *)mw_internals.chunks + mw_internals.chunks->size;
+         (void *)curr < (void *)mw_internals.chunks + MW_CHUNK_SIZE;
          curr = block_end(curr), i++)
     {
         if (heap_layout[i].payload_size != -1)

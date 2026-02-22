@@ -46,7 +46,7 @@ void mw_free(void *ptr)
     }
 
     if (block_end(block) !=
-        (void *)&mw_internals.chunks->start + mw_internals.chunks->size)
+        (void *)&mw_internals.chunks->start + MW_CHUNK_SIZE)
     {
         // if block after is free coalesce
         size_t next_marked_size = *(size_t *)block_end(block);

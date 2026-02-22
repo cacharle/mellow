@@ -55,11 +55,7 @@ static bool heap_init(void)
     mw_internals.chunks = system_allocate(MW_CHUNK_SIZE);
     if (mw_internals.chunks == NULL)
         return false;
-    mw_internals.chunks->size = MW_CHUNK_SIZE;
     mw_internals.chunks->next = NULL;
-    // mw_internals.chunks->start = (void*)mw_internals.chunks +
-    // mw_internals.chunks->size; block_set_size(mw_internals.chunks->start,
-    // MW_CHUNK_SIZE - MW_CHUNK_METADATA_SIZE);
     mw_internals.free_list = &mw_internals.chunks->start;
     mw_internals.free_list->prev = NULL;
     mw_internals.free_list->next = NULL;
@@ -71,14 +67,13 @@ static bool heap_init(void)
 static bool grow_heap(void)
 {
     assert(mw_internals.chunks != NULL);
-    void *last_addr = ((void *)mw_internals.chunks) + mw_internals.chunks->size;
+    void *last_addr = ((void *)mw_internals.chunks) + MW_CHUNK_SIZE;
     assert((size_t)last_addr % mw_internals.page_size == 0);
     bool     hint_followed;
     chunk_t *new_chunk =
         system_allocate_with_hint(last_addr, MW_CHUNK_SIZE, &hint_followed);
     if (new_chunk == NULL)
         return false;
-    new_chunk->size = MW_CHUNK_SIZE;
     new_chunk->next = mw_internals.chunks;
     mw_internals.chunks = new_chunk;
     // The allocated addess is right after the current heap

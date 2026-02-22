@@ -69,8 +69,9 @@ one is to just insert it at the beginning.
 - [x] Dedicated mmap for too large payloads
 - [ ] Test if allocating with hint works
 - [ ] Free everything with munmap at the end
-- [ ] Keep track of allocated chunks
+- [x] Keep track of allocated chunks
 - [ ] Add a fuzzer to catch every edge case
+- [ ] Make free/realloc work with chunks (chunk boundary flag)
 
 #### Secondary
 

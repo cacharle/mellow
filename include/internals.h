@@ -38,7 +38,6 @@ typedef struct large_block
 
 typedef struct chunk
 {
-    size_t        size;
     struct chunk *next;
     block_t       start;
 } chunk_t;
@@ -56,7 +55,7 @@ extern struct mellow_internals mw_internals;
 
 #define MW_ALIGNMENT_SIZE 8
 #define MW_CHUNK_SIZE (1 << 14)
-#define MW_CHUNK_METADATA_SIZE (sizeof(size_t) + sizeof(struct chunk *))
+#define MW_CHUNK_METADATA_SIZE sizeof(struct chunk *)
 #if MW_CHUNK_SIZE % MW_ALIGNMENT_SIZE != 0
 #error "Invalid heap size"
 #endif
